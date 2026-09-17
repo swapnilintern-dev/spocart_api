@@ -1,0 +1,390 @@
+// =============================================================================
+// SPOCART — database schema (single source of truth for the app + website)
+//
+// Money columns are BigInt paise (₹1,200 = 120000). Column names are
+// snake_case in Postgres and camelCase in code / JSON via @map.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  buyer
+  admin
+}
+
+enum BusinessType {
+  retailer
+  wholesaler
+  academy
+  school
+  club
+  gym
+  corporate
+  other
+}
+
+enum ProductUnit {
+  pc
+  pair
+  set
+  box
+}
+
+enum AddressLabel {
+  home
+  office
+  warehouse
+  ground
+  other
+}
+
+enum TeamRole {
+  purchaser
+  accounts
+  viewer
+}
+
+enum PaymentMethod {
+  razorpay
+  payLater
+}
+
+enum OrderStatus {
+  paymentPending
+  placed
+  packed
+  dispatched
+  outForDelivery
+  delivered
+  cancelled
+}
+
+enum PaymentStatus {
+  created
+  captured
+  failed
+  refunded
+}
+
+enum QuoteKind {
+  bulk
+  custom
+  csv
+}
+
+enum QuoteStatus {
+  submitted
+  underReview
+  quoted
+  accepted
+  declined
+}
+
+enum NotificationType {
+  orderPlaced
+  orderShipped
+  orderDelivered
+  offer
+  newProduct
+  priceDrop
+  quote
+}
+
+// ─── Accounts ────────────────────────────────────────────────────────────────
+
+model User {
+  id            String           @id @default(uuid()) @db.Uuid
+  mobile        String           @unique @db.Char(10)
+  role          UserRole         @default(buyer)
+  creditLimit   BigInt           @default(10000000) @map("credit_limit")
+  tokenVersion  Int              @default(0) @map("token_version")
+  createdAt     DateTime         @default(now()) @map("created_at")
+  profile       BusinessProfile?
+  addresses     Address[]
+  team          TeamMember[]
+  orders        Order[]
+  quotes        Quote[]
+  notifications Notification[]
+  devices       DeviceToken[]
+
+  @@map("users")
+}
+
+model BusinessProfile {
+  userId       String       @id @map("user_id") @db.Uuid
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName String       @map("business_name")
+  gstin        String       @db.Char(15)
+  businessType BusinessType @map("business_type")
+  contactName  String       @map("contact_name")
+  mobile       String       @db.Char(10)
+  email        String
+  updatedAt    DateTime     @updatedAt @map("updated_at")
+
+  @@map("business_profiles")
+}
+
+model OtpCode {
+  mobile    String   @id @db.Char(10)
+  codeHash  String   @map("code_hash")
+  expiresAt DateTime @map("expires_at")
+  attempts  Int      @default(0)
+
+  @@map("otp_codes")
+}
+
+model Address {
+  id           String       @id @default(uuid()) @db.Uuid
+  userId       String       @map("user_id") @db.Uuid
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contactName  String       @map("contact_name")
+  businessName String       @default("") @map("business_name")
+  line1        String
+  line2        String       @default("")
+  city         String
+  state        String
+  pincode      String       @db.Char(6)
+  mobile       String       @db.Char(10)
+  label        AddressLabel @default(home)
+  isDefault    Boolean      @default(false) @map("is_default")
+  createdAt    DateTime     @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("addresses")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  mobile    String   @db.Char(10)
+  role      TeamRole
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([userId])
+  @@map("team_members")
+}
+
+model DeviceToken {
+  token     String   @id
+  userId    String   @map("user_id") @db.Uuid
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  platform  String
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("device_tokens")
+}
+
+// ─── Catalogue ───────────────────────────────────────────────────────────────
+
+model Category {
+  id            String    @id
+  name          String
+  icon          String
+  imageUrl      String?   @map("image_url")
+  subcategories String[]
+  sortOrder     Int       @default(0) @map("sort_order")
+  active        Boolean   @default(true)
+  products      Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id           String        @id
+  categoryId   String        @map("category_id")
+  category     Category      @relation(fields: [categoryId], references: [id])
+  name         String
+  brand        String
+  subcategory  String
+  unit         ProductUnit   @default(pc)
+  moq          Int
+  description  String
+  images       String[]
+  sizes        String[]
+  features     Json          @default("[]")
+  rating       Decimal       @default(0) @db.Decimal(2, 1)
+  reviewCount  Int           @default(0) @map("review_count")
+  inStock      Boolean       @default(true) @map("in_stock")
+  popular      Boolean       @default(false)
+  customisable Boolean       @default(false)
+  active       Boolean       @default(true)
+  tiers        ProductTier[]
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+
+  @@index([categoryId])
+  @@map("products")
+}
+
+/// Slab pricing: unitPrice applies from minQty upwards. First tier's minQty = moq.
+model ProductTier {
+  productId String  @map("product_id")
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  minQty    Int     @map("min_qty")
+  unitPrice BigInt  @map("unit_price")
+
+  @@id([productId, minQty])
+  @@map("product_tiers")
+}
+
+// ─── Orders & payments ───────────────────────────────────────────────────────
+
+model Order {
+  id              String               @id
+  userId          String               @map("user_id") @db.Uuid
+  user            User                 @relation(fields: [userId], references: [id])
+  status          OrderStatus          @default(paymentPending)
+  paymentMethod   PaymentMethod        @map("payment_method")
+  paid            Boolean              @default(false)
+  subtotal        BigInt
+  gst             BigInt
+  total           BigInt
+  address         Json
+  invoiceId       String               @unique @map("invoice_id")
+  trackingId      String?              @map("tracking_id")
+  etaStart        DateTime             @map("eta_start") @db.Date
+  etaEnd          DateTime             @map("eta_end") @db.Date
+  razorpayOrderId String?              @unique @map("razorpay_order_id")
+  placedAt        DateTime             @default(now()) @map("placed_at")
+  statusUpdatedAt DateTime             @default(now()) @map("status_updated_at")
+  items           OrderItem[]
+  history         OrderStatusHistory[]
+  payments        Payment[]
+
+  @@index([userId, placedAt(sort: Desc)])
+  @@index([status])
+  @@map("orders")
+}
+
+/// Frozen copy of the product at purchase time.
+model OrderItem {
+  id        BigInt  @id @default(autoincrement())
+  orderId   String  @map("order_id")
+  order     Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String  @map("product_id")
+  name      String
+  image     String
+  unit      String
+  quantity  Int
+  unitPrice BigInt  @map("unit_price")
+  size      String?
+
+  @@index([orderId])
+  @@map("order_items")
+}
+
+model OrderStatusHistory {
+  id      BigInt      @id @default(autoincrement())
+  orderId String      @map("order_id")
+  order   Order       @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  status  OrderStatus
+  note    String?
+  at      DateTime    @default(now())
+
+  @@index([orderId])
+  @@map("order_status_history")
+}
+
+model Payment {
+  id                String        @id @default(uuid()) @db.Uuid
+  orderId           String        @map("order_id")
+  order             Order         @relation(fields: [orderId], references: [id])
+  razorpayOrderId   String        @map("razorpay_order_id")
+  razorpayPaymentId String?       @unique @map("razorpay_payment_id")
+  amount            BigInt
+  method            String?
+  status            PaymentStatus @default(created)
+  raw               Json?
+  capturedAt        DateTime?     @map("captured_at")
+  refundId          String?       @map("refund_id")
+  createdAt         DateTime      @default(now()) @map("created_at")
+
+  @@index([orderId])
+  @@map("payments")
+}
+
+// ─── Quotes, notifications, leads ────────────────────────────────────────────
+
+model Quote {
+  id            String      @id
+  userId        String?     @map("user_id") @db.Uuid
+  user          User?       @relation(fields: [userId], references: [id])
+  kind          QuoteKind
+  notes         String      @default("")
+  designFileUrl String?     @map("design_file_url")
+  status        QuoteStatus @default(submitted)
+  quotedTotal   BigInt?     @map("quoted_total")
+  adminNote     String?     @map("admin_note")
+  source        String      @default("app")
+  contactName   String?     @map("contact_name")
+  contactMobile String?     @map("contact_mobile")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  items         QuoteItem[]
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          BigInt  @id @default(autoincrement())
+  quoteId     String  @map("quote_id")
+  quote       Quote   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+  description String
+  quantity    Int
+  productId   String? @map("product_id")
+  size        String?
+
+  @@map("quote_items")
+}
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  read      Boolean          @default(false)
+  orderId   String?          @map("order_id")
+  productId String?          @map("product_id")
+  quoteId   String?          @map("quote_id")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  @@index([userId, createdAt(sort: Desc)])
+  @@map("notifications")
+}
+
+/// Website contact-form submissions.
+model Lead {
+  id         String   @id @default(uuid()) @db.Uuid
+  name       String
+  business   String?
+  mobile     String
+  email      String?
+  message    String
+  sourcePage String?  @map("source_page")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  @@map("leads")
+}
+
+/// Atomic, gap-free counters for SC-2025-0345 / INV-… / QT-… ids.
+model IdCounter {
+  prefix String
+  year   Int
+  seq    Int
+
+  @@id([prefix, year])
+  @@map("id_counters")
+}

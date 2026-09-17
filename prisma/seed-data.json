@@ -1,0 +1,1814 @@
+{
+  "categories": [
+    {
+      "id": "cricket",
+      "name": "Cricket",
+      "icon": "sports_cricket",
+      "imageUrl": "/uploads/catalog/cricket_ball.jpg",
+      "subcategories": [
+        "Bats",
+        "Balls",
+        "Gear",
+        "Sets"
+      ],
+      "sortOrder": 1
+    },
+    {
+      "id": "football",
+      "name": "Football",
+      "icon": "sports_soccer",
+      "imageUrl": "/uploads/catalog/footballs_stack.jpg",
+      "subcategories": [
+        "Balls",
+        "Training",
+        "Gear"
+      ],
+      "sortOrder": 2
+    },
+    {
+      "id": "badminton",
+      "name": "Badminton",
+      "icon": "sports_tennis",
+      "imageUrl": "/uploads/catalog/hero_badminton.jpg",
+      "subcategories": [
+        "Rackets",
+        "Shuttles",
+        "Nets"
+      ],
+      "sortOrder": 3
+    },
+    {
+      "id": "basketball",
+      "name": "Basketball",
+      "icon": "sports_basketball",
+      "imageUrl": null,
+      "subcategories": [
+        "Balls",
+        "Nets",
+        "Gear"
+      ],
+      "sortOrder": 4
+    },
+    {
+      "id": "table-tennis",
+      "name": "Table Tennis",
+      "icon": "table_bar",
+      "imageUrl": null,
+      "subcategories": [
+        "Bats",
+        "Balls",
+        "Tables"
+      ],
+      "sortOrder": 5
+    },
+    {
+      "id": "tennis",
+      "name": "Tennis",
+      "icon": "sports_tennis",
+      "imageUrl": "/uploads/catalog/tennis_clay.jpg",
+      "subcategories": [
+        "Rackets",
+        "Balls",
+        "Accessories"
+      ],
+      "sortOrder": 6
+    },
+    {
+      "id": "hockey",
+      "name": "Hockey",
+      "icon": "sports_hockey",
+      "imageUrl": null,
+      "subcategories": [
+        "Sticks",
+        "Balls",
+        "Gear"
+      ],
+      "sortOrder": 7
+    },
+    {
+      "id": "volleyball",
+      "name": "Volleyball",
+      "icon": "sports_volleyball",
+      "imageUrl": null,
+      "subcategories": [
+        "Balls",
+        "Nets"
+      ],
+      "sortOrder": 8
+    },
+    {
+      "id": "athletics",
+      "name": "Athletics",
+      "icon": "directions_run",
+      "imageUrl": "/uploads/catalog/runners_group.jpg",
+      "subcategories": [
+        "Track",
+        "Field",
+        "Training"
+      ],
+      "sortOrder": 9
+    },
+    {
+      "id": "swimming",
+      "name": "Swimming",
+      "icon": "pool",
+      "imageUrl": "/uploads/catalog/swimmer.jpg",
+      "subcategories": [
+        "Goggles",
+        "Caps",
+        "Training"
+      ],
+      "sortOrder": 10
+    },
+    {
+      "id": "fitness",
+      "name": "Gym & Fitness",
+      "icon": "fitness_center",
+      "imageUrl": "/uploads/catalog/gym_dumbbells.jpg",
+      "subcategories": [
+        "Weights",
+        "Mats",
+        "Accessories"
+      ],
+      "sortOrder": 11
+    }
+  ],
+  "products": [
+    {
+      "id": "ck-kashmir-willow-bat",
+      "categoryId": "cricket",
+      "name": "Kashmir Willow Cricket Bat",
+      "brand": "SS",
+      "subcategory": "Bats",
+      "unit": "pc",
+      "moq": 10,
+      "description": "Seasoned Kashmir willow with a full profile and thick edges — built for academy nets and club matches. Pre-knocked and fitted with a multi-colour grip.",
+      "images": [
+        "/uploads/catalog/cricket_ball.jpg",
+        "/uploads/catalog/warehouse_aisle.jpg"
+      ],
+      "sizes": [
+        "SH",
+        "6",
+        "5",
+        "4"
+      ],
+      "features": [
+        {
+          "label": "Premium Willow",
+          "icon": "forest"
+        },
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.5,
+      "reviewCount": 124,
+      "inStock": true,
+      "popular": true,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          180000
+        ],
+        [
+          50,
+          160000
+        ],
+        [
+          100,
+          140000
+        ],
+        [
+          500,
+          120000
+        ]
+      ]
+    },
+    {
+      "id": "ck-english-willow-bat",
+      "categoryId": "cricket",
+      "name": "English Willow Pro Bat",
+      "brand": "SG",
+      "subcategory": "Bats",
+      "unit": "pc",
+      "moq": 5,
+      "description": "Grade-2 English willow with a mid-to-low sweet spot for tournament play. Ideal for academy elite squads and retail display.",
+      "images": [
+        "/uploads/catalog/cricket_ball.jpg"
+      ],
+      "sizes": [
+        "SH",
+        "LH"
+      ],
+      "features": [
+        {
+          "label": "Premium Willow",
+          "icon": "forest"
+        },
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.7,
+      "reviewCount": 86,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          5,
+          680000
+        ],
+        [
+          20,
+          620000
+        ],
+        [
+          50,
+          560000
+        ]
+      ]
+    },
+    {
+      "id": "ck-ss-ball",
+      "categoryId": "cricket",
+      "name": "SS Cricket Ball",
+      "brand": "SS",
+      "subcategory": "Balls",
+      "unit": "pc",
+      "moq": 24,
+      "description": "Four-piece alum-tanned leather ball with a hand-stitched seam. Holds shape across long practice sessions.",
+      "images": [
+        "/uploads/catalog/cricket_ball.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 212,
+      "inStock": true,
+      "popular": true,
+      "customisable": false,
+      "tiers": [
+        [
+          24,
+          42000
+        ],
+        [
+          96,
+          35000
+        ],
+        [
+          240,
+          29000
+        ],
+        [
+          600,
+          25000
+        ]
+      ]
+    },
+    {
+      "id": "ck-batting-helmet",
+      "categoryId": "cricket",
+      "name": "Batting Helmet",
+      "brand": "Shrey",
+      "subcategory": "Gear",
+      "unit": "pc",
+      "moq": 6,
+      "description": "ABS shell with a steel grille and adjustable rear strap. Meets BS7928 safety standards — mandatory for academy programmes.",
+      "images": [],
+      "sizes": [
+        "S",
+        "M",
+        "L",
+        "XL"
+      ],
+      "features": [
+        {
+          "label": "Safety Certified",
+          "icon": "verified"
+        },
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        }
+      ],
+      "rating": 4.6,
+      "reviewCount": 58,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          6,
+          160000
+        ],
+        [
+          24,
+          135000
+        ],
+        [
+          60,
+          115000
+        ],
+        [
+          120,
+          100000
+        ]
+      ]
+    },
+    {
+      "id": "ck-cricket-shoes",
+      "categoryId": "cricket",
+      "name": "Cricket Shoes (Rubber Spikes)",
+      "brand": "Nivia",
+      "subcategory": "Gear",
+      "unit": "pair",
+      "moq": 12,
+      "description": "Breathable mesh upper with rubber-stud outsole for turf and matting wickets. Available in a full institutional size run.",
+      "images": [],
+      "sizes": [
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ],
+      "features": [
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.2,
+      "reviewCount": 41,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          12,
+          350000
+        ],
+        [
+          36,
+          290000
+        ],
+        [
+          100,
+          230000
+        ],
+        [
+          250,
+          180000
+        ]
+      ]
+    },
+    {
+      "id": "ck-academy-kit",
+      "categoryId": "cricket",
+      "name": "Academy Cricket Kit (Full Set)",
+      "brand": "SG",
+      "subcategory": "Sets",
+      "unit": "set",
+      "moq": 5,
+      "description": "Complete player set: Kashmir willow bat, batting pads, gloves, thigh guard, abdo guard and a wheeled kit bag. Bulk-ready for academies.",
+      "images": [
+        "/uploads/catalog/warehouse_aisle.jpg"
+      ],
+      "sizes": [
+        "Youth",
+        "Senior"
+      ],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Customisable",
+          "icon": "brush"
+        }
+      ],
+      "rating": 4.5,
+      "reviewCount": 33,
+      "inStock": true,
+      "popular": false,
+      "customisable": true,
+      "tiers": [
+        [
+          5,
+          720000
+        ],
+        [
+          20,
+          660000
+        ],
+        [
+          50,
+          600000
+        ]
+      ]
+    },
+    {
+      "id": "ck-stumps-set",
+      "categoryId": "cricket",
+      "name": "Wooden Stumps & Bails Set",
+      "brand": "SS",
+      "subcategory": "Sets",
+      "unit": "set",
+      "moq": 10,
+      "description": "Seasoned wood stumps with steel-tipped bases and a pair of bails. Regulation dimensions for match and practice grounds.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 27,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          95000
+        ],
+        [
+          40,
+          85000
+        ],
+        [
+          100,
+          76000
+        ]
+      ]
+    },
+    {
+      "id": "fb-match-ball-5",
+      "categoryId": "football",
+      "name": "Football (Size 5)",
+      "brand": "Nivia",
+      "subcategory": "Balls",
+      "unit": "pc",
+      "moq": 20,
+      "description": "Thermo-bonded 32-panel match ball with a butyl bladder for shape and air retention across all-weather play.",
+      "images": [
+        "/uploads/catalog/footballs_stack.jpg",
+        "/uploads/catalog/football_match.jpg"
+      ],
+      "sizes": [
+        "5",
+        "4",
+        "3"
+      ],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.6,
+      "reviewCount": 340,
+      "inStock": true,
+      "popular": true,
+      "customisable": false,
+      "tiers": [
+        [
+          20,
+          120000
+        ],
+        [
+          50,
+          98000
+        ],
+        [
+          150,
+          82000
+        ],
+        [
+          500,
+          65000
+        ]
+      ]
+    },
+    {
+      "id": "fb-training-ball",
+      "categoryId": "football",
+      "name": "Training Football (Machine Stitched)",
+      "brand": "Cosco",
+      "subcategory": "Balls",
+      "unit": "pc",
+      "moq": 30,
+      "description": "Machine-stitched PU training ball built for daily drills on grass and artificial turf. The high-volume academy workhorse.",
+      "images": [
+        "/uploads/catalog/footballs_stack.jpg"
+      ],
+      "sizes": [
+        "5",
+        "4"
+      ],
+      "features": [
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 190,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          30,
+          70000
+        ],
+        [
+          100,
+          59000
+        ],
+        [
+          300,
+          48000
+        ]
+      ]
+    },
+    {
+      "id": "fb-cone-set",
+      "categoryId": "football",
+      "name": "Training Cones (Set of 50)",
+      "brand": "Nivia",
+      "subcategory": "Training",
+      "unit": "set",
+      "moq": 5,
+      "description": "High-visibility marker cones with a carry stand — the coaching essential for drills and agility grids.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.5,
+      "reviewCount": 77,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          5,
+          90000
+        ],
+        [
+          20,
+          80000
+        ],
+        [
+          50,
+          70000
+        ]
+      ]
+    },
+    {
+      "id": "fb-team-jersey",
+      "categoryId": "football",
+      "name": "Team Jersey (Sublimated)",
+      "brand": "SPOCART Custom",
+      "subcategory": "Gear",
+      "unit": "pc",
+      "moq": 15,
+      "description": "Moisture-wicking polyester jersey with full sublimation printing — crest, numbers and sponsor logos included in the price.",
+      "images": [
+        "/uploads/catalog/football_match.jpg"
+      ],
+      "sizes": [
+        "XS",
+        "S",
+        "M",
+        "L",
+        "XL",
+        "XXL"
+      ],
+      "features": [
+        {
+          "label": "Customisable",
+          "icon": "brush"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        },
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        }
+      ],
+      "rating": 4.7,
+      "reviewCount": 156,
+      "inStock": true,
+      "popular": true,
+      "customisable": true,
+      "tiers": [
+        [
+          15,
+          65000
+        ],
+        [
+          50,
+          56000
+        ],
+        [
+          150,
+          48000
+        ],
+        [
+          500,
+          42000
+        ]
+      ]
+    },
+    {
+      "id": "fb-goalkeeper-gloves",
+      "categoryId": "football",
+      "name": "Goalkeeper Gloves",
+      "brand": "Nivia",
+      "subcategory": "Gear",
+      "unit": "pair",
+      "moq": 10,
+      "description": "Latex palm with finger-save spines and a double wrist strap. Sized for youth through senior keepers.",
+      "images": [],
+      "sizes": [
+        "6",
+        "7",
+        "8",
+        "9",
+        "10"
+      ],
+      "features": [
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        },
+        {
+          "label": "Safety Certified",
+          "icon": "verified"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        }
+      ],
+      "rating": 4.2,
+      "reviewCount": 48,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          85000
+        ],
+        [
+          40,
+          74000
+        ],
+        [
+          100,
+          65000
+        ]
+      ]
+    },
+    {
+      "id": "bd-graphite-racket",
+      "categoryId": "badminton",
+      "name": "Badminton Racket",
+      "brand": "Yonex",
+      "subcategory": "Rackets",
+      "unit": "pc",
+      "moq": 10,
+      "description": "Full-graphite frame with an isometric head for a larger sweet spot. Strung and covered — ready for the court.",
+      "images": [
+        "/uploads/catalog/hero_badminton.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        }
+      ],
+      "rating": 4.6,
+      "reviewCount": 203,
+      "inStock": true,
+      "popular": true,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          120000
+        ],
+        [
+          40,
+          105000
+        ],
+        [
+          100,
+          92000
+        ],
+        [
+          300,
+          80000
+        ]
+      ]
+    },
+    {
+      "id": "bd-feather-shuttle",
+      "categoryId": "badminton",
+      "name": "Feather Shuttlecocks (Tube of 12)",
+      "brand": "Yonex",
+      "subcategory": "Shuttles",
+      "unit": "box",
+      "moq": 10,
+      "description": "Tournament-speed goose-feather shuttles on a natural cork base for true flight and consistent match play.",
+      "images": [
+        "/uploads/catalog/hero_badminton.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 312,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          145000
+        ],
+        [
+          50,
+          128000
+        ],
+        [
+          200,
+          112000
+        ]
+      ]
+    },
+    {
+      "id": "bd-nylon-shuttle",
+      "categoryId": "badminton",
+      "name": "Nylon Shuttlecocks (Tube of 6)",
+      "brand": "Cosco",
+      "subcategory": "Shuttles",
+      "unit": "box",
+      "moq": 20,
+      "description": "Durable nylon-skirt shuttles for school and club training. Medium speed, long life on indoor and outdoor courts.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        }
+      ],
+      "rating": 4.1,
+      "reviewCount": 98,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          20,
+          38000
+        ],
+        [
+          100,
+          33000
+        ],
+        [
+          300,
+          29000
+        ]
+      ]
+    },
+    {
+      "id": "bd-net-set",
+      "categoryId": "badminton",
+      "name": "Badminton Net (Regulation)",
+      "brand": "Nivia",
+      "subcategory": "Nets",
+      "unit": "pc",
+      "moq": 5,
+      "description": "Braided nylon net with a vinyl-coated headband and tension cord. Regulation 6.1 m width for competition courts.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 36,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          5,
+          110000
+        ],
+        [
+          20,
+          96000
+        ],
+        [
+          50,
+          85000
+        ]
+      ]
+    },
+    {
+      "id": "bb-indoor-7",
+      "categoryId": "basketball",
+      "name": "Basketball (Size 7)",
+      "brand": "Spalding",
+      "subcategory": "Balls",
+      "unit": "pc",
+      "moq": 10,
+      "description": "Composite-leather ball with deep channels for court control — indoor/outdoor rated for institutional fixtures.",
+      "images": [],
+      "sizes": [
+        "7",
+        "6",
+        "5"
+      ],
+      "features": [
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        },
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.5,
+      "reviewCount": 142,
+      "inStock": true,
+      "popular": true,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          165000
+        ],
+        [
+          40,
+          145000
+        ],
+        [
+          100,
+          125000
+        ]
+      ]
+    },
+    {
+      "id": "bb-hoop-net",
+      "categoryId": "basketball",
+      "name": "Heavy-Duty Basketball Net",
+      "brand": "Nivia",
+      "subcategory": "Nets",
+      "unit": "pc",
+      "moq": 20,
+      "description": "All-weather anti-whip net with 12 loops — the high-volume court replacement essential.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.2,
+      "reviewCount": 64,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          20,
+          32000
+        ],
+        [
+          80,
+          28000
+        ],
+        [
+          200,
+          24000
+        ]
+      ]
+    },
+    {
+      "id": "tt-bat-pro",
+      "categoryId": "table-tennis",
+      "name": "Table Tennis Bat (5-Ply)",
+      "brand": "Stag",
+      "subcategory": "Bats",
+      "unit": "pc",
+      "moq": 12,
+      "description": "Five-ply blade with pimples-in rubber and a flared handle — a balanced all-round bat for school and club programmes.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        },
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 88,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          12,
+          52000
+        ],
+        [
+          48,
+          46000
+        ],
+        [
+          120,
+          40000
+        ]
+      ]
+    },
+    {
+      "id": "tt-balls-box",
+      "categoryId": "table-tennis",
+      "name": "TT Balls 3-Star (Box of 12)",
+      "brand": "Stag",
+      "subcategory": "Balls",
+      "unit": "box",
+      "moq": 10,
+      "description": "40+ mm seamless poly balls, ITTF-approved 3-star grade. Consistent bounce for competition play.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 120,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          48000
+        ],
+        [
+          50,
+          42000
+        ],
+        [
+          150,
+          37000
+        ]
+      ]
+    },
+    {
+      "id": "tn-racket-graphite",
+      "categoryId": "tennis",
+      "name": "Tennis Racket (Graphite)",
+      "brand": "Head",
+      "subcategory": "Rackets",
+      "unit": "pc",
+      "moq": 6,
+      "description": "Graphite-composite frame, 100 sq in head, strung — a forgiving racket for academy intermediates.",
+      "images": [
+        "/uploads/catalog/tennis_clay.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        }
+      ],
+      "rating": 4.5,
+      "reviewCount": 52,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          6,
+          340000
+        ],
+        [
+          24,
+          305000
+        ],
+        [
+          60,
+          275000
+        ]
+      ]
+    },
+    {
+      "id": "tn-balls-can",
+      "categoryId": "tennis",
+      "name": "Tennis Balls (Can of 3)",
+      "brand": "Head",
+      "subcategory": "Balls",
+      "unit": "box",
+      "moq": 24,
+      "description": "Pressurised ITF-approved balls in a sealed can. Extra-duty felt for hard courts.",
+      "images": [
+        "/uploads/catalog/tennis_clay.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.6,
+      "reviewCount": 240,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          24,
+          52000
+        ],
+        [
+          96,
+          47000
+        ],
+        [
+          240,
+          42000
+        ]
+      ]
+    },
+    {
+      "id": "hk-stick-composite",
+      "categoryId": "hockey",
+      "name": "Hockey Stick (Composite)",
+      "brand": "SNS",
+      "subcategory": "Sticks",
+      "unit": "pc",
+      "moq": 10,
+      "description": "30% carbon composite stick with a mid-bow profile. Sized 34\"–37\" for school and academy squads.",
+      "images": [],
+      "sizes": [
+        "34\"",
+        "35\"",
+        "36\"",
+        "37\""
+      ],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 39,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          240000
+        ],
+        [
+          30,
+          215000
+        ],
+        [
+          80,
+          190000
+        ]
+      ]
+    },
+    {
+      "id": "hk-turf-ball",
+      "categoryId": "hockey",
+      "name": "Hockey Turf Ball (Dimple)",
+      "brand": "SNS",
+      "subcategory": "Balls",
+      "unit": "pc",
+      "moq": 24,
+      "description": "PVC dimpled ball for astro-turf; consistent roll and low bounce for match and drill use.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.2,
+      "reviewCount": 61,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          24,
+          26000
+        ],
+        [
+          96,
+          22500
+        ],
+        [
+          240,
+          19500
+        ]
+      ]
+    },
+    {
+      "id": "vb-match-ball",
+      "categoryId": "volleyball",
+      "name": "Volleyball (Match)",
+      "brand": "Cosco",
+      "subcategory": "Balls",
+      "unit": "pc",
+      "moq": 12,
+      "description": "18-panel PU laminated volleyball with a butyl bladder — soft touch for indoor and beach play.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Match Grade",
+          "icon": "emoji_events"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 74,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          12,
+          98000
+        ],
+        [
+          48,
+          86000
+        ],
+        [
+          120,
+          75000
+        ]
+      ]
+    },
+    {
+      "id": "vb-net",
+      "categoryId": "volleyball",
+      "name": "Volleyball Net (Competition)",
+      "brand": "Nivia",
+      "subcategory": "Nets",
+      "unit": "pc",
+      "moq": 5,
+      "description": "9.5 m braided net with steel cable, side tapes and antenna pockets. Regulation for institutional courts.",
+      "images": [],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "All-Weather",
+          "icon": "wb_cloudy"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 22,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          5,
+          210000
+        ],
+        [
+          15,
+          190000
+        ],
+        [
+          40,
+          170000
+        ]
+      ]
+    },
+    {
+      "id": "at-hurdle",
+      "categoryId": "athletics",
+      "name": "Adjustable Track Hurdle",
+      "brand": "Vinex",
+      "subcategory": "Track",
+      "unit": "pc",
+      "moq": 6,
+      "description": "Height-adjustable competition hurdle with a weighted, powder-coated base for stability across athletics programmes.",
+      "images": [
+        "/uploads/catalog/runners_group.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Safety Certified",
+          "icon": "verified"
+        }
+      ],
+      "rating": 4.5,
+      "reviewCount": 18,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          6,
+          240000
+        ],
+        [
+          20,
+          215000
+        ],
+        [
+          50,
+          195000
+        ]
+      ]
+    },
+    {
+      "id": "at-relay-baton",
+      "categoryId": "athletics",
+      "name": "Aluminium Relay Baton (Set of 8)",
+      "brand": "Vinex",
+      "subcategory": "Track",
+      "unit": "set",
+      "moq": 5,
+      "description": "Regulation anodised aluminium batons in eight colours — a complete set for track events.",
+      "images": [
+        "/uploads/catalog/runners_group.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 25,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          5,
+          140000
+        ],
+        [
+          20,
+          125000
+        ],
+        [
+          50,
+          110000
+        ]
+      ]
+    },
+    {
+      "id": "at-running-shoes",
+      "categoryId": "athletics",
+      "name": "Running Shoes (Institutional)",
+      "brand": "Nivia",
+      "subcategory": "Training",
+      "unit": "pair",
+      "moq": 20,
+      "description": "Lightweight mesh runner with an EVA midsole for daily training. Full size run for schools and academies.",
+      "images": [
+        "/uploads/catalog/runners_group.jpg"
+      ],
+      "sizes": [
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11"
+      ],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        },
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        }
+      ],
+      "rating": 4.1,
+      "reviewCount": 133,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          20,
+          145000
+        ],
+        [
+          100,
+          125000
+        ],
+        [
+          300,
+          108000
+        ]
+      ]
+    },
+    {
+      "id": "sw-goggles",
+      "categoryId": "swimming",
+      "name": "Swimming Goggles (Anti-Fog)",
+      "brand": "Speedo",
+      "subcategory": "Goggles",
+      "unit": "pc",
+      "moq": 20,
+      "description": "Anti-fog, UV-protected lenses with a silicone seal and quick-adjust strap. Youth and adult fits.",
+      "images": [
+        "/uploads/catalog/swimmer.jpg"
+      ],
+      "sizes": [
+        "Youth",
+        "Adult"
+      ],
+      "features": [
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        },
+        {
+          "label": "Safety Certified",
+          "icon": "verified"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 96,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          20,
+          65000
+        ],
+        [
+          80,
+          56000
+        ],
+        [
+          200,
+          48000
+        ]
+      ]
+    },
+    {
+      "id": "sw-silicone-cap",
+      "categoryId": "swimming",
+      "name": "Silicone Swim Cap",
+      "brand": "Speedo",
+      "subcategory": "Caps",
+      "unit": "pc",
+      "moq": 30,
+      "description": "Seamless moulded silicone cap — tear-resistant, printable with the club or academy crest.",
+      "images": [
+        "/uploads/catalog/swimmer.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Customisable",
+          "icon": "brush"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.2,
+      "reviewCount": 71,
+      "inStock": true,
+      "popular": false,
+      "customisable": true,
+      "tiers": [
+        [
+          30,
+          24000
+        ],
+        [
+          100,
+          20000
+        ],
+        [
+          500,
+          16000
+        ]
+      ]
+    },
+    {
+      "id": "sw-kickboard",
+      "categoryId": "swimming",
+      "name": "EVA Kickboard",
+      "brand": "Cosco",
+      "subcategory": "Training",
+      "unit": "pc",
+      "moq": 15,
+      "description": "High-density EVA foam kickboard with moulded hand grips for learn-to-swim and training programmes.",
+      "images": [
+        "/uploads/catalog/swimmer.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 44,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          15,
+          42000
+        ],
+        [
+          60,
+          37000
+        ],
+        [
+          150,
+          32000
+        ]
+      ]
+    },
+    {
+      "id": "ft-dumbbell-set",
+      "categoryId": "fitness",
+      "name": "Rubber Hex Dumbbell Set (2.5–10 kg)",
+      "brand": "Kobo",
+      "subcategory": "Weights",
+      "unit": "set",
+      "moq": 3,
+      "description": "Hex rubber-coated dumbbells with knurled chrome handles — built for high-traffic institutional gyms.",
+      "images": [
+        "/uploads/catalog/gym_dumbbells.jpg",
+        "/uploads/catalog/gym_studio.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Durable",
+          "icon": "shield"
+        },
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        }
+      ],
+      "rating": 4.6,
+      "reviewCount": 67,
+      "inStock": true,
+      "popular": true,
+      "customisable": false,
+      "tiers": [
+        [
+          3,
+          580000
+        ],
+        [
+          10,
+          530000
+        ],
+        [
+          25,
+          490000
+        ]
+      ]
+    },
+    {
+      "id": "ft-exercise-mat",
+      "categoryId": "fitness",
+      "name": "Anti-Skid Exercise Mat",
+      "brand": "Kobo",
+      "subcategory": "Mats",
+      "unit": "pc",
+      "moq": 20,
+      "description": "High-density NBR mat with reinforced edges, sized for studio and multipurpose-hall use.",
+      "images": [
+        "/uploads/catalog/fitness_accessories.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Superior Grip",
+          "icon": "back_hand"
+        },
+        {
+          "label": "Comfort Fit",
+          "icon": "accessibility_new"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.4,
+      "reviewCount": 158,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          20,
+          69000
+        ],
+        [
+          60,
+          60000
+        ],
+        [
+          150,
+          52000
+        ]
+      ]
+    },
+    {
+      "id": "ft-resistance-bands",
+      "categoryId": "fitness",
+      "name": "Resistance Band Set (5 Levels)",
+      "brand": "Kobo",
+      "subcategory": "Accessories",
+      "unit": "set",
+      "moq": 10,
+      "description": "Five latex loop bands from extra-light to extra-heavy in a mesh carry pouch. Rehab, warm-up and strength work.",
+      "images": [
+        "/uploads/catalog/fitness_accessories.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.3,
+      "reviewCount": 201,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          10,
+          48000
+        ],
+        [
+          50,
+          42000
+        ],
+        [
+          150,
+          36000
+        ]
+      ]
+    },
+    {
+      "id": "ft-skipping-rope",
+      "categoryId": "fitness",
+      "name": "Speed Skipping Rope",
+      "brand": "Nivia",
+      "subcategory": "Accessories",
+      "unit": "pc",
+      "moq": 25,
+      "description": "Steel-cable rope with ball-bearing handles and an adjustable length. A conditioning staple for every sport.",
+      "images": [
+        "/uploads/catalog/gym_studio.jpg"
+      ],
+      "sizes": [],
+      "features": [
+        {
+          "label": "Lightweight",
+          "icon": "air"
+        },
+        {
+          "label": "Durable",
+          "icon": "shield"
+        }
+      ],
+      "rating": 4.2,
+      "reviewCount": 119,
+      "inStock": true,
+      "popular": false,
+      "customisable": false,
+      "tiers": [
+        [
+          25,
+          26000
+        ],
+        [
+          100,
+          22500
+        ],
+        [
+          300,
+          19000
+        ]
+      ]
+    }
+  ]
+}
