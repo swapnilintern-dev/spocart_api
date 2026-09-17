@@ -61,7 +61,7 @@ export function checkoutFor(order, profile, razorpayOrderId) {
     currency: 'INR',
     name: 'SPOCART',
     description: `Order ${order.id}`,
-    prefill: { contact: `+91${profile.mobile}`, email: profile.email, name: profile.contactName },
+    prefill: { contact: profile.mobile, email: profile.email, name: profile.contactName },
     themeColor: '#E4132B',
   };
 }

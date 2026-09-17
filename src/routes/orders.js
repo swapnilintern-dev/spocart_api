@@ -7,6 +7,7 @@ import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { placeOrder, retryPayment, serializeOrder, orderInclude } from '../services/orders.js';
 import { markCaptured, verifyCheckoutSignature } from '../services/payments.js';
+import { razorpay } from '../services/razorpay.js';
 import { uuid } from './_schemas.js';
 
 const r = Router();
@@ -54,12 +55,25 @@ r.post('/payments/verify', validate(z.object({
   }
   const order = await prisma.order.findFirst({ where: { razorpayOrderId: req.body.razorpayOrderId, userId: req.user.id } });
   if (!order) throw new ApiError(404, 'Order not found.');
+
+  // Signature proves the client saw a success; Razorpay itself confirms the
+  // capture, amount and method (the webhook / reconcile job do the same).
+  let payment = null;
+  try {
+    payment = await razorpay.payments.fetch(req.body.razorpayPaymentId);
+  } catch (e) {
+    req.log?.warn({ err: e.error ?? e.message }, 'razorpay payments.fetch failed');
+  }
+  if (payment && payment.order_id !== order.razorpayOrderId) throw new ApiError(400, 'Payment does not belong to this order.');
+  if (payment && !['captured', 'authorized'].includes(payment.status)) {
+    throw new ApiError(400, 'Payment is not complete yet. It will be reconciled automatically once captured.');
+  }
   const updated = await markCaptured({
     order,
     razorpayPaymentId: req.body.razorpayPaymentId,
-    amount: order.total,
-    method: null,
-    raw: req.body,
+    amount: payment ? BigInt(payment.amount) : order.total,
+    method: payment?.method ?? null,
+    raw: payment ?? req.body,
     source: 'app',
   });
   ok(res, serializeOrder(updated));
