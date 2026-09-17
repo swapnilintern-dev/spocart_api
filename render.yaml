@@ -1,0 +1,37 @@
+# Render Blueprint — New > Blueprint > pick this repo and every setting below
+# is applied. Secrets marked sync:false are entered once in the dashboard.
+services:
+  - type: web
+    name: spocart-api
+    runtime: node
+    region: singapore
+    plan: free                      # upgrade to starter ($7/mo) to avoid cold starts
+    buildCommand: npm ci && npx prisma generate
+    startCommand: npx prisma migrate deploy && node src/server.js
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_TTL
+        value: 30d
+      - key: SMS_DRIVER
+        value: console              # msg91 once DLT is approved
+      - key: CORS_ORIGINS
+        value: https://spocart.in,https://www.spocart.in
+      - key: UNPAID_ORDER_TTL_MINUTES
+        value: "30"
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        generateValue: true
+      - key: ADMIN_MOBILES
+        sync: false
+      - key: PUBLIC_BASE_URL
+        sync: false
