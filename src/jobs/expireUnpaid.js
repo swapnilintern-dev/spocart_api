@@ -4,9 +4,14 @@ import cron from 'node-cron';
 import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { minutesAgo } from '../utils/dates.js';
+import { reconcilePending } from '../services/reconcile.js';
 
 export function startExpireUnpaidJob() {
   cron.schedule('*/5 * * * *', async () => {
+    // First sync with Razorpay so a paid-but-unnotified order is never cancelled.
+    const { fixed } = await reconcilePending().catch(() => ({ fixed: 0 }));
+    if (fixed) console.log(`reconcile: marked ${fixed} order(s) paid from Razorpay`);
+
     const stale = await prisma.order.findMany({
       where: { status: 'paymentPending', placedAt: { lt: minutesAgo(env.UNPAID_ORDER_TTL_MINUTES) } },
       select: { id: true },

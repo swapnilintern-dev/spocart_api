@@ -9,6 +9,7 @@ import { ok } from '../utils/respond.js';
 import { serializeOrder, orderInclude } from '../services/orders.js';
 import { advanceStatus, cancelOrder } from '../services/status.js';
 import { refundPayment } from '../services/payments.js';
+import { reconcileOrder, reconcilePending } from '../services/reconcile.js';
 import { respondToQuote, serializeQuote, quoteInclude } from '../services/quotes.js';
 import { validateTiers } from '../services/pricing.js';
 import { notify } from '../services/notify.js';
@@ -55,6 +56,14 @@ r.post('/orders/:id/cancel', validate(z.object({ note: z.string().trim().max(500
     if (captured) await refundPayment(captured.id);
     ok(res, serializeOrder(order));
   }));
+
+/** Pull payment status from Razorpay for one order / all pending orders. */
+r.post('/orders/:id/reconcile', asyncHandler(async (req, res) => {
+  const order = await prisma.order.findUnique({ where: { id: req.params.id }, include: orderInclude });
+  if (!order) throw new ApiError(404, 'Order not found.');
+  ok(res, serializeOrder(await reconcileOrder(order)));
+}));
+r.post('/reconcile', asyncHandler(async (_req, res) => ok(res, await reconcilePending())));
 
 r.post('/payments/:id/refund', validate(z.object({ amount: z.number().positive().optional() })),
   asyncHandler(async (req, res) => {
