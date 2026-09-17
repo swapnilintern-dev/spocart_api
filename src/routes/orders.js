@@ -13,7 +13,7 @@ const r = Router();
 r.use(requireAuth);
 
 const STATUS_FILTERS = {
-  pending: ['placed', 'packed'],
+  pending: ['paymentPending', 'placed', 'packed'],
   shipped: ['dispatched', 'outForDelivery'],
   delivered: ['delivered'],
 };
@@ -35,7 +35,7 @@ r.get('/', asyncHandler(async (req, res) => {
   const rows = await prisma.order.findMany({
     where: {
       userId: req.user.id,
-      ...(filter ? { status: { in: filter } } : { status: { not: 'paymentPending' } }),
+      ...(filter && { status: { in: filter } }),
     },
     include: orderInclude,
     orderBy: { placedAt: 'desc' },
