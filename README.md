@@ -41,3 +41,4 @@ With `SMS_DRIVER=console` the OTP prints in the server log.
 `webhooks/razorpay`. Every response is `{ ok, data }` or `{ ok: false, message }`.
 
 Admins = mobile numbers listed in `ADMIN_MOBILES`; they sign in with the same OTP flow.
+# spocart_api
