@@ -43,5 +43,8 @@
     "@prisma/engines@6.19.3": true,
     "@prisma/client@6.19.3": true,
     "fsevents@2.3.3": true
+  },
+  "engines": {
+    "node": ">=20"
   }
 }
