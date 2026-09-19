@@ -7,7 +7,8 @@ import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { absoluteUrl } from '../services/orders.js';
 
-const ALLOWED = new Set(['.png', '.jpg', '.jpeg', '.pdf', '.ai', '.svg']);
+// Designs (logo artwork) and BOQ / tender documents from the website.
+const ALLOWED = new Set(['.png', '.jpg', '.jpeg', '.pdf', '.ai', '.svg', '.xlsx', '.xls', '.csv', '.doc', '.docx']);
 
 // Local disk for now (served at /uploads). Swap `storage` for S3/R2 in production.
 const storage = multer.diskStorage({
@@ -23,7 +24,7 @@ const upload = multer({
   limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const ext = path.extname(file.originalname).toLowerCase();
-    if (!ALLOWED.has(ext)) return cb(new ApiError(400, 'Upload PNG, JPG, PDF, AI or SVG files only.'));
+    if (!ALLOWED.has(ext)) return cb(new ApiError(400, 'Upload PNG, JPG, PDF, AI, SVG, Excel, CSV or Word files only.'));
     cb(null, true);
   },
 });

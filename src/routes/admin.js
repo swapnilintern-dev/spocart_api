@@ -15,9 +15,15 @@ import { validateTiers } from '../services/pricing.js';
 import { notify } from '../services/notify.js';
 import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
+import adminDb from './adminDb.js';
+import multer from 'multer';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import { absoluteUrl } from '../services/orders.js';
 
 const r = Router();
 r.use(requireAuth, requireAdmin);
+r.use('/db', adminDb);   // full database console (see adminDb.js)
 
 const toPaise = (rupees) => BigInt(Math.round(rupees * 100));
 
@@ -206,6 +212,27 @@ r.post('/categories', validate(z.object({
   imageUrl: z.string().optional(), subcategories: z.array(z.string()).default([]), sortOrder: z.number().int().default(0), active: z.boolean().default(true),
 })), asyncHandler(async (req, res) => {
   ok(res, await prisma.category.upsert({ where: { id: req.body.id }, create: req.body, update: req.body }), 201);
+}));
+
+// ─── Catalogue images (admin panel product editor) ──────────────────────────
+// Local disk, served at /uploads/catalog. Ephemeral on Render — move to S3/R2
+// for production (same swap as uploads.js).
+const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+const catalogUpload = multer({
+  storage: multer.diskStorage({
+    destination: 'uploads/catalog',
+    filename: (_req, file, cb) => cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${path.extname(file.originalname).toLowerCase()}`),
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!IMAGE_EXT.has(path.extname(file.originalname).toLowerCase())) return cb(new ApiError(400, 'Upload PNG, JPG or WebP images only.'));
+    cb(null, true);
+  },
+});
+r.post('/uploads/catalog', catalogUpload.single('file'), asyncHandler(async (req, res) => {
+  if (!req.file) throw new ApiError(400, 'Attach an image in the "file" field.');
+  const relative = `/uploads/catalog/${req.file.filename}`;
+  ok(res, { url: absoluteUrl(relative), path: relative, name: req.file.originalname, size: req.file.size }, 201);
 }));
 
 // ─── Broadcast ───────────────────────────────────────────────────────────────
