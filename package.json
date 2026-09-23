@@ -11,7 +11,10 @@
     "deploy": "prisma migrate deploy",
     "seed": "prisma db seed",
     "studio": "prisma studio",
-    "generate": "prisma generate"
+    "generate": "prisma generate",
+    "dev:neon": "DATABASE_URL=\"$(grep '^DATABASE_URL=' .env.production | cut -d= -f2- | tr -d '\"')\" nodemon src/server.js",
+    "start:neon": "DATABASE_URL=\"$(grep '^DATABASE_URL=' .env.production | cut -d= -f2- | tr -d '\"')\" node src/server.js",
+    "migrate:uploads": "node scripts/migrate-uploads-to-cloudinary.js"
   },
   "keywords": [],
   "author": "",
@@ -19,6 +22,7 @@
   "type": "module",
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "cloudinary": "^2.11.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",

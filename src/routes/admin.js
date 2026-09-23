@@ -18,8 +18,7 @@ import { uuid } from './_schemas.js';
 import adminDb from './adminDb.js';
 import multer from 'multer';
 import path from 'node:path';
-import crypto from 'node:crypto';
-import { absoluteUrl } from '../services/orders.js';
+import { storeFile } from '../services/storage.js';
 
 const r = Router();
 r.use(requireAuth, requireAdmin);
@@ -215,14 +214,9 @@ r.post('/categories', validate(z.object({
 }));
 
 // ─── Catalogue images (admin panel product editor) ──────────────────────────
-// Local disk, served at /uploads/catalog. Ephemeral on Render — move to S3/R2
-// for production (same swap as uploads.js).
 const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp']);
 const catalogUpload = multer({
-  storage: multer.diskStorage({
-    destination: 'uploads/catalog',
-    filename: (_req, file, cb) => cb(null, `${Date.now()}-${crypto.randomBytes(4).toString('hex')}${path.extname(file.originalname).toLowerCase()}`),
-  }),
+  storage: multer.memoryStorage(),
   limits: { fileSize: 5 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     if (!IMAGE_EXT.has(path.extname(file.originalname).toLowerCase())) return cb(new ApiError(400, 'Upload PNG, JPG or WebP images only.'));
@@ -231,8 +225,7 @@ const catalogUpload = multer({
 });
 r.post('/uploads/catalog', catalogUpload.single('file'), asyncHandler(async (req, res) => {
   if (!req.file) throw new ApiError(400, 'Attach an image in the "file" field.');
-  const relative = `/uploads/catalog/${req.file.filename}`;
-  ok(res, { url: absoluteUrl(relative), path: relative, name: req.file.originalname, size: req.file.size }, 201);
+  ok(res, await storeFile(req.file, req.query.folder === 'categories' ? 'categories' : 'products'), 201);
 }));
 
 // ─── Broadcast ───────────────────────────────────────────────────────────────

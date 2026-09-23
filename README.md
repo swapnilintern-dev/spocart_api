@@ -62,3 +62,33 @@ through one generic, validated CRUD surface used by the website's admin panel:
 Tables: categories, products, users, addresses, orders, payments, quotes,
 leads, notifications, team, devices (read/delete), otp (read/delete).
 System-generated tables (payments, quotes, devices, otp) cannot be created by hand.
+
+
+## File storage (Cloudinary)
+
+Product photos, category tiles and customer uploads (jersey artwork from the app,
+BOQ / tender documents from the website) go to Cloudinary under
+`spocart/products`, `spocart/categories` and `spocart/quotes`.
+
+Set in the Render dashboard (never in the repo):
+
+```
+CLOUDINARY_CLOUD_NAME   CLOUDINARY_API_KEY   CLOUDINARY_API_SECRET
+```
+
+Without those three the API falls back to local disk (`uploads/`), which is fine
+for development but is wiped on every Render deploy.
+
+Images are delivered through Cloudinary with `f_auto,q_auto` (WebP/AVIF, automatic
+quality) — roughly 5–10× smaller than the originals. Raw files (PDF, CSV, XLSX)
+are served unchanged.
+
+One-time move of existing files and URLs:
+
+```bash
+npm run migrate:uploads             # dry run — shows what would change
+npm run migrate:uploads -- --apply  # uploads and rewrites the stored URLs
+```
+
+Never delete a Cloudinary asset that an old order references: `order_items.image`
+keeps the photo as it was when the order was placed.
