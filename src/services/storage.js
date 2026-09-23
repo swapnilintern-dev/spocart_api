@@ -26,6 +26,14 @@ const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp', '.gif', '.svg']);
 const isImage = (name) => IMAGE_EXT.has(path.extname(name).toLowerCase());
 
 /**
+ * Strips delivery transformations so the database always holds the canonical
+ * asset URL — `absoluteUrl` re-applies optimisation when serving, so changing
+ * the optimisation later updates every existing image.
+ */
+export const canonicalImageUrl = (url) =>
+  (typeof url === 'string' ? url.replace(/(\/image\/upload\/)(?:[^/]+\/)*?(v\d+\/)/, '$1$2') : url);
+
+/**
  * Stores one uploaded file and returns { url, path, name, size }.
  * `url` is what goes into the database and is served to the app and website.
  */

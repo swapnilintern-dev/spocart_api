@@ -18,7 +18,7 @@ import { uuid } from './_schemas.js';
 import adminDb from './adminDb.js';
 import multer from 'multer';
 import path from 'node:path';
-import { storeFile } from '../services/storage.js';
+import { storeFile, canonicalImageUrl } from '../services/storage.js';
 
 const r = Router();
 r.use(requireAuth, requireAdmin);
@@ -176,6 +176,7 @@ const productBody = z.object({
 });
 
 async function upsertProduct(data, existingId) {
+  data.images = (data.images ?? []).map(canonicalImageUrl);
   const tiers = data.tiers.map((t) => ({ minQty: t.minQty, unitPrice: toPaise(t.unitPrice) }));
   const problem = validateTiers(tiers, data.moq);
   if (problem) throw new ApiError(400, problem);
