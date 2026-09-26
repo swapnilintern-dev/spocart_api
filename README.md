@@ -100,7 +100,7 @@ Two ways in, both ending in the same SPOCART JWT and the same `users` row:
 
 | Method | Endpoint | Who sends the SMS |
 |---|---|---|
-| Built-in OTP | `POST /auth/otp/send` → `POST /auth/otp/verify` | this server (`SMS_DRIVER=console\|msg91`) |
+| Built-in OTP | `POST /auth/otp/send` → `POST /auth/otp/verify` | this server (`SMS_DRIVER`) |
 | Firebase phone auth | client completes OTP with Firebase → `POST /auth/firebase` with `{ idToken }` | Google |
 
 `GET /auth/methods` reports which are available, so the clients do not hardcode it.
@@ -109,3 +109,17 @@ Firebase is enabled by setting `FIREBASE_SERVICE_ACCOUNT` (service-account JSON,
 one line or base64) in the Render dashboard. The token is verified with the
 Admin SDK — including revocation — and the phone number is read from the token,
 never from the request body.
+
+
+## OTP delivery (`SMS_DRIVER`)
+
+The code is always created, hashed, expired (5 min) and attempt-limited (5) by
+this server; the driver only carries it to the customer.
+
+| Driver | Needs | Notes |
+|---|---|---|
+| `console` | — | prints the code in the server log (development) |
+| `2factor` | `TWOFACTOR_API_KEY` | 2Factor.in; no DLT registration of your own. `TWOFACTOR_TEMPLATE_NAME` optional, `TWOFACTOR_VOICE_FALLBACK=true` retries as a voice call when the SMS fails |
+| `msg91` | `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID` | your own DLT-registered template |
+
+Switching providers is an environment change — the app and website are untouched.
