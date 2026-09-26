@@ -24,6 +24,10 @@ const schema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+  // Firebase phone sign-in (app + website). Paste the service-account JSON
+  // (or its base64) in the Render dashboard; leave empty to keep the built-in
+  // OTP flow as the only way in.
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

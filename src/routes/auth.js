@@ -6,9 +6,13 @@ import { asyncHandler } from '../middleware/error.js';
 import { otpLimiter } from '../middleware/rateLimit.js';
 import { ok } from '../utils/respond.js';
 import * as auth from '../services/auth.js';
+import { mobileFromIdToken, firebaseEnabled } from '../services/firebase.js';
 import { mobile, gstin, email, businessType } from './_schemas.js';
 
 const r = Router();
+
+/** Lets the app and website pick the sign-in method the server actually supports. */
+r.get('/methods', (_req, res) => ok(res, { firebase: firebaseEnabled(), otp: true }));
 
 r.post('/otp/send', otpLimiter, validate(z.object({ mobile })), asyncHandler(async (req, res) => {
   ok(res, await auth.sendOtp(req.body.mobile));
@@ -18,6 +22,15 @@ r.post('/otp/verify', otpLimiter, validate(z.object({ mobile, code: z.string().r
   asyncHandler(async (req, res) => {
     ok(res, await auth.verifyOtp(req.body.mobile, req.body.code));
   }));
+
+/**
+ * Firebase phone sign-in: the client completes the OTP with Firebase and posts
+ * the resulting ID token here. Same response shape as /otp/verify.
+ */
+r.post('/firebase', otpLimiter, validate(z.object({ idToken: z.string().min(20) })), asyncHandler(async (req, res) => {
+  const mobile = await mobileFromIdToken(req.body.idToken);
+  ok(res, await auth.signIn(mobile));
+}));
 
 r.get('/me', requireAuth, (req, res) => ok(res, auth.serializeUser(req.user)));
 

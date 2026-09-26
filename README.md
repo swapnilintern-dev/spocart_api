@@ -92,3 +92,20 @@ npm run migrate:uploads -- --apply  # uploads and rewrites the stored URLs
 
 Never delete a Cloudinary asset that an old order references: `order_items.image`
 keeps the photo as it was when the order was placed.
+
+
+## Sign-in methods
+
+Two ways in, both ending in the same SPOCART JWT and the same `users` row:
+
+| Method | Endpoint | Who sends the SMS |
+|---|---|---|
+| Built-in OTP | `POST /auth/otp/send` → `POST /auth/otp/verify` | this server (`SMS_DRIVER=console\|msg91`) |
+| Firebase phone auth | client completes OTP with Firebase → `POST /auth/firebase` with `{ idToken }` | Google |
+
+`GET /auth/methods` reports which are available, so the clients do not hardcode it.
+
+Firebase is enabled by setting `FIREBASE_SERVICE_ACCOUNT` (service-account JSON,
+one line or base64) in the Render dashboard. The token is verified with the
+Admin SDK — including revocation — and the phone number is read from the token,
+never from the request body.

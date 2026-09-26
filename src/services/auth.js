@@ -40,7 +40,15 @@ export async function verifyOtp(mobile, code) {
     throw new ApiError(400, 'Incorrect OTP. Please check and try again.');
   }
   await prisma.otpCode.delete({ where: { mobile } });
+  return signIn(mobile);
+}
 
+/**
+ * Creates or fetches the user for a mobile number we have just proven the
+ * caller owns, and returns our own session. Used by both the built-in OTP
+ * flow and Firebase phone sign-in.
+ */
+export async function signIn(mobile) {
   const user = await prisma.user.upsert({
     where: { mobile },
     create: { mobile, role: adminMobiles.has(mobile) ? 'admin' : 'buyer' },
