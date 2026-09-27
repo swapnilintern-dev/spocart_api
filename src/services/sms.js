@@ -9,27 +9,44 @@ import { env } from '../config/env.js';
 
 const timeout = (ms) => AbortSignal.timeout(ms);
 
-/** 2Factor: send our own code so expiry and attempt limits stay with us. */
+/**
+ * 2Factor: send our own code so expiry and attempt limits stay with us.
+ * The SMS attempt is retried once before any voice fallback, because a slow
+ * first call from a cold instance should not turn a text into a phone call.
+ */
 async function send2Factor(mobile, otp) {
   if (!env.TWOFACTOR_API_KEY) throw new Error('TWOFACTOR_API_KEY is required when SMS_DRIVER=2factor');
-  const template = encodeURIComponent(env.TWOFACTOR_TEMPLATE_NAME || '');
-  const url = `https://2factor.in/API/V1/${env.TWOFACTOR_API_KEY}/SMS/${mobile}/${otp}${template ? `/${template}` : ''}`;
+  const template = env.TWOFACTOR_TEMPLATE_NAME ? `/${encodeURIComponent(env.TWOFACTOR_TEMPLATE_NAME)}` : '';
+  const url = `https://2factor.in/API/V1/${env.TWOFACTOR_API_KEY}/SMS/${mobile}/${otp}${template}`;
 
-  let body;
-  try {
-    const res = await fetch(url, { signal: timeout(10_000) });
-    body = await res.json().catch(() => null);
-    if (res.ok && body?.Status === 'Success') return;
-  } catch {
-    body = null;                                   // network / timeout — fall through to voice
+  let lastReason = 'unknown';
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const res = await fetch(url, { signal: timeout(20_000) });
+      const body = await res.json().catch(() => null);
+      if (res.ok && body?.Status === 'Success') {
+        console.log(`[2factor] SMS queued for +91${mobile}${template ? ` (template ${env.TWOFACTOR_TEMPLATE_NAME})` : ' (no template)'} — session ${body.Details}`);
+        return;
+      }
+      lastReason = body?.Details ?? `HTTP ${res.status}`;
+    } catch (e) {
+      lastReason = e.name === 'TimeoutError' ? 'timed out after 20s' : e.message;
+    }
+    console.warn(`[2factor] SMS attempt ${attempt} failed for +91${mobile}: ${lastReason}`);
   }
 
   if (env.TWOFACTOR_VOICE_FALLBACK) {
-    const voice = await fetch(`https://2factor.in/API/V1/${env.TWOFACTOR_API_KEY}/VOICE/${mobile}/${otp}`, { signal: timeout(10_000) });
-    const vb = await voice.json().catch(() => null);
-    if (voice.ok && vb?.Status === 'Success') return;
+    console.warn(`[2factor] falling back to a voice call for +91${mobile}`);
+    try {
+      const voice = await fetch(`https://2factor.in/API/V1/${env.TWOFACTOR_API_KEY}/VOICE/${mobile}/${otp}`, { signal: timeout(20_000) });
+      const vb = await voice.json().catch(() => null);
+      if (voice.ok && vb?.Status === 'Success') return;
+      lastReason = `${lastReason}; voice also failed: ${vb?.Details ?? voice.status}`;
+    } catch (e) {
+      lastReason = `${lastReason}; voice also failed: ${e.message}`;
+    }
   }
-  throw new Error(`2Factor could not deliver the OTP${body?.Details ? `: ${body.Details}` : ''}`);
+  throw new Error(`2Factor could not deliver the OTP: ${lastReason}`);
 }
 
 async function sendMsg91(mobile, variables) {
