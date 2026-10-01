@@ -27,4 +27,34 @@ describe('public api', () => {
     expect(res.status).toBe(400);
     expect(res.body.message).toMatch(/valid 10-digit mobile/);
   });
+
+  // The OTP limiter keys on the mobile in the body and falls back to the IP when
+  // there is not a usable one. That fallback must never throw: a bad or missing
+  // mobile has to reach the validator and come back as a 400.
+  it('the OTP limiter survives a request with no usable mobile', async () => {
+    for (const body of [{}, { mobile: '' }, { mobile: 123 }, { mobile: 'abcdefghij' }]) {
+      const res = await request(app).post('/api/v1/auth/otp/send').send(body);
+      expect(res.status, JSON.stringify(body)).toBe(400);
+      expect(res.body.ok).toBe(false);
+    }
+  });
+
+  it('sign-in methods are advertised', async () => {
+    const res = await request(app).get('/api/v1/auth/methods');
+    expect(res.status).toBe(200);
+    expect(res.body.data.otp).toBe(true);
+    expect(typeof res.body.data.firebase).toBe('boolean');
+  });
+
+  it('the PIN lookup is not public', async () => {
+    const res = await request(app).get('/api/v1/addresses/pincode/411001');
+    expect(res.status).toBe(401);
+  });
+
+  it('changing a mobile number is not public', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/mobile/change/send')
+      .send({ mobile: '9123456780' });
+    expect(res.status).toBe(401);
+  });
 });

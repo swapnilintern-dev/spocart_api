@@ -12,13 +12,25 @@ const schema = z.object({
   RAZORPAY_KEY_ID: z.string().min(1),
   RAZORPAY_KEY_SECRET: z.string().min(1),
   RAZORPAY_WEBHOOK_SECRET: z.string().min(1),
-  SMS_DRIVER: z.enum(['console', 'msg91']).default('console'),
+  SMS_DRIVER: z.enum(['console', '2factor', 'msg91']).default('console'),
+  TWOFACTOR_API_KEY: z.string().optional(),
+  TWOFACTOR_TEMPLATE_NAME: z.string().optional(),
+  TWOFACTOR_VOICE_FALLBACK: z.coerce.boolean().default(false),
   MSG91_AUTH_KEY: z.string().optional(),
   MSG91_TEMPLATE_ID: z.string().optional(),
   PUBLIC_BASE_URL: z.string().default('http://localhost:3000'),
   CORS_ORIGINS: z.string().default(''),
   ADMIN_MOBILES: z.string().default(''),
   UNPAID_ORDER_TTL_MINUTES: z.coerce.number().default(30),
+  // File storage. All three must be set to use Cloudinary; otherwise uploads
+  // fall back to local disk (fine for development, wiped on every Render deploy).
+  CLOUDINARY_CLOUD_NAME: z.string().optional(),
+  CLOUDINARY_API_KEY: z.string().optional(),
+  CLOUDINARY_API_SECRET: z.string().optional(),
+  // Firebase phone sign-in (app + website). Paste the service-account JSON
+  // (or its base64) in the Render dashboard; leave empty to keep the built-in
+  // OTP flow as the only way in.
+  FIREBASE_SERVICE_ACCOUNT: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

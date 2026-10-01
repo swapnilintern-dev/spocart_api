@@ -64,6 +64,67 @@ leads, notifications, team, devices (read/delete), otp (read/delete).
 System-generated tables (payments, quotes, devices, otp) cannot be created by hand.
 
 
+## File storage (Cloudinary)
+
+Product photos, category tiles and customer uploads (jersey artwork from the app,
+BOQ / tender documents from the website) go to Cloudinary under
+`spocart/products`, `spocart/categories` and `spocart/quotes`.
+
+Set in the Render dashboard (never in the repo):
+
+```
+CLOUDINARY_CLOUD_NAME   CLOUDINARY_API_KEY   CLOUDINARY_API_SECRET
+```
+
+Without those three the API falls back to local disk (`uploads/`), which is fine
+for development but is wiped on every Render deploy.
+
+Images are delivered through Cloudinary with `f_auto,q_auto` (WebP/AVIF, automatic
+quality) — roughly 5–10× smaller than the originals. Raw files (PDF, CSV, XLSX)
+are served unchanged.
+
+One-time move of existing files and URLs:
+
+```bash
+npm run migrate:uploads             # dry run — shows what would change
+npm run migrate:uploads -- --apply  # uploads and rewrites the stored URLs
+```
+
+Never delete a Cloudinary asset that an old order references: `order_items.image`
+keeps the photo as it was when the order was placed.
+
+
+## Sign-in methods
+
+Two ways in, both ending in the same SPOCART JWT and the same `users` row:
+
+| Method | Endpoint | Who sends the SMS |
+|---|---|---|
+| Built-in OTP | `POST /auth/otp/send` → `POST /auth/otp/verify` | this server (`SMS_DRIVER`) |
+| Firebase phone auth | client completes OTP with Firebase → `POST /auth/firebase` with `{ idToken }` | Google |
+
+`GET /auth/methods` reports which are available, so the clients do not hardcode it.
+
+Firebase is enabled by setting `FIREBASE_SERVICE_ACCOUNT` (service-account JSON,
+one line or base64) in the Render dashboard. The token is verified with the
+Admin SDK — including revocation — and the phone number is read from the token,
+never from the request body.
+
+
+## OTP delivery (`SMS_DRIVER`)
+
+The code is always created, hashed, expired (5 min) and attempt-limited (5) by
+this server; the driver only carries it to the customer.
+
+| Driver | Needs | Notes |
+|---|---|---|
+| `console` | — | prints the code in the server log (development) |
+| `2factor` | `TWOFACTOR_API_KEY` | 2Factor.in; no DLT registration of your own. `TWOFACTOR_TEMPLATE_NAME` optional, `TWOFACTOR_VOICE_FALLBACK=true` retries as a voice call when the SMS fails |
+| `msg91` | `MSG91_AUTH_KEY`, `MSG91_TEMPLATE_ID` | your own DLT-registered template |
+
+Switching providers is an environment change — the app and website are untouched.
+
+
 ## Changing the registered mobile number (`/api/v1/auth/mobile/change`)
 
 The contact number used to change without verification. It cannot any more:

@@ -51,7 +51,20 @@ export function serializeOrder(o) {
   };
 }
 
-export const absoluteUrl = (path) => (path && path.startsWith('/') ? `${env.PUBLIC_BASE_URL}${path}` : path);
+/**
+ * Turns a stored path into something a client can load.
+ * - "/uploads/…"  → prefixed with PUBLIC_BASE_URL (local-disk fallback)
+ * - Cloudinary images → delivered as WebP/AVIF at automatic quality (much smaller;
+ *   raw files like PDFs and spreadsheets are left untouched)
+ */
+export const absoluteUrl = (path) => {
+  if (!path) return path;
+  if (path.startsWith('/')) return `${env.PUBLIC_BASE_URL}${path}`;
+  if (path.includes('/image/upload/') && !path.includes('/image/upload/f_auto')) {
+    return path.replace('/image/upload/', '/image/upload/f_auto,q_auto/');
+  }
+  return path;
+};
 
 export function checkoutFor(order, profile, razorpayOrderId) {
   return {

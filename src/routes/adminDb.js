@@ -10,6 +10,7 @@ import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { validateTiers } from '../services/pricing.js';
 import { mobile, gstin, pincode, email, businessType } from './_schemas.js';
+import { canonicalImageUrl } from '../services/storage.js';
 
 const money = z.number().min(0);                       // rupees in / out
 const slug = z.string().regex(/^[a-z0-9-]+$/, 'Use a slug like ck-kashmir-willow-bat');
@@ -28,6 +29,7 @@ const TABLES = {
       sortOrder: { type: 'number', schema: z.number().int() },
       active: { type: 'bool', schema: z.boolean() },
     },
+    beforeWrite: async (data) => { if (data.imageUrl) data.imageUrl = canonicalImageUrl(data.imageUrl); },
     guardDelete: async (id) => { const n = await prisma.product.count({ where: { categoryId: id } }); if (n) throw new ApiError(400, `${n} product(s) still use this category. Move or delete them first.`); },
   },
   products: {
@@ -55,6 +57,7 @@ const TABLES = {
     },
     serialize: (p) => ({ ...p, rating: Number(p.rating), tiers: (p.tiers || []).map((t) => ({ minQty: t.minQty, unitPrice: Number(t.unitPrice) / 100 })) }),
     beforeWrite: async (data, existing) => {
+      if (data.images) data.images = data.images.map(canonicalImageUrl);
       if (data.tiers) {
         const tiers = data.tiers.map((t) => ({ minQty: t.minQty, unitPrice: BigInt(Math.round(t.unitPrice * 100)) }));
         const problem = validateTiers(tiers, data.moq ?? existing?.moq ?? 1);

@@ -16,6 +16,9 @@ import { notify } from '../services/notify.js';
 import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
 import adminDb from './adminDb.js';
+import multer from 'multer';
+import path from 'node:path';
+import { storeFile, canonicalImageUrl } from '../services/storage.js';
 
 const r = Router();
 r.use(requireAuth, requireAdmin);
@@ -173,6 +176,7 @@ const productBody = z.object({
 });
 
 async function upsertProduct(data, existingId) {
+  data.images = (data.images ?? []).map(canonicalImageUrl);
   const tiers = data.tiers.map((t) => ({ minQty: t.minQty, unitPrice: toPaise(t.unitPrice) }));
   const problem = validateTiers(tiers, data.moq);
   if (problem) throw new ApiError(400, problem);
@@ -208,6 +212,21 @@ r.post('/categories', validate(z.object({
   imageUrl: z.string().optional(), subcategories: z.array(z.string()).default([]), sortOrder: z.number().int().default(0), active: z.boolean().default(true),
 })), asyncHandler(async (req, res) => {
   ok(res, await prisma.category.upsert({ where: { id: req.body.id }, create: req.body, update: req.body }), 201);
+}));
+
+// ─── Catalogue images (admin panel product editor) ──────────────────────────
+const IMAGE_EXT = new Set(['.png', '.jpg', '.jpeg', '.webp']);
+const catalogUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    if (!IMAGE_EXT.has(path.extname(file.originalname).toLowerCase())) return cb(new ApiError(400, 'Upload PNG, JPG or WebP images only.'));
+    cb(null, true);
+  },
+});
+r.post('/uploads/catalog', catalogUpload.single('file'), asyncHandler(async (req, res) => {
+  if (!req.file) throw new ApiError(400, 'Attach an image in the "file" field.');
+  ok(res, await storeFile(req.file, req.query.folder === 'categories' ? 'categories' : 'products'), 201);
 }));
 
 // ─── Broadcast ───────────────────────────────────────────────────────────────

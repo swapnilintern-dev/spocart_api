@@ -1,4 +1,4 @@
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 const message = { ok: false, message: 'Too many requests. Please try again in a few minutes.' };
 
@@ -14,9 +14,12 @@ export const otpIpLimiter = rateLimit({ ...base, limit: 40 });
 export const otpMobileLimiter = rateLimit({
   ...base,
   limit: 8,
-  keyGenerator: (req, res) => {
+  keyGenerator: (req) => {
     const mobile = typeof req.body?.mobile === 'string' ? req.body.mobile.trim() : '';
-    return /^[6-9]\d{9}$/.test(mobile) ? `mobile:${mobile}` : `ip:${rateLimit.ipKeyGenerator(req, res)}`;
+    if (/^[6-9]\d{9}$/.test(mobile)) return `mobile:${mobile}`;
+    // ipKeyGenerator normalises IPv6 into a /56 subnet, so one client cannot
+    // walk through addresses to get a fresh budget.
+    return `ip:${ipKeyGenerator(req.ip ?? '')}`;
   },
 });
 
