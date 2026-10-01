@@ -15,9 +15,11 @@ import { validateTiers } from '../services/pricing.js';
 import { notify } from '../services/notify.js';
 import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
+import adminDb from './adminDb.js';
 
 const r = Router();
 r.use(requireAuth, requireAdmin);
+r.use('/db', adminDb);   // full database console (see adminDb.js)
 
 const toPaise = (rupees) => BigInt(Math.round(rupees * 100));
 

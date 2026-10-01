@@ -42,3 +42,23 @@ With `SMS_DRIVER=console` the OTP prints in the server log.
 
 Admins = mobile numbers listed in `ADMIN_MOBILES`; they sign in with the same OTP flow.
 # spocart_api
+
+
+## Admin database console (`/api/v1/admin/db`)
+
+`src/routes/adminDb.js` exposes every table to admins (JWT with `role=admin`)
+through one generic, validated CRUD surface used by the website's admin panel:
+
+| Route | Purpose |
+|---|---|
+| `GET /admin/db` | table list with field metadata (types, enums, read-only, refs) — drives the UI forms |
+| `GET /admin/db/_meta/stats` | row counts per table |
+| `GET /admin/db/:table?q=&offset=&limit=` | search + paginate |
+| `GET /admin/db/:table/:id` | one row (with relations, e.g. product tiers, order items/payments/history) |
+| `POST /admin/db/:table` | create (zod-validated per table) |
+| `PUT /admin/db/:table/:id` | partial update; money columns are rupees; product `tiers` and user `profile.*` are written through |
+| `DELETE /admin/db/:table/:id` | delete with guards: category with products, product referenced by order lines, user with orders, non-cancelled orders or captured payments are refused |
+
+Tables: categories, products, users, addresses, orders, payments, quotes,
+leads, notifications, team, devices (read/delete), otp (read/delete).
+System-generated tables (payments, quotes, devices, otp) cannot be created by hand.

@@ -6,3 +6,4 @@ uploads/designs/*
 !uploads/designs/.gitkeep
 generated/
 coverage/
+.DS_Store
