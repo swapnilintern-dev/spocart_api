@@ -81,7 +81,7 @@ const TABLES = {
       'profile.gstin': { type: 'text', schema: gstin.optional(), label: 'GSTIN' },
       'profile.businessType': { type: 'enum', options: ['retailer', 'wholesaler', 'academy', 'school', 'club', 'gym', 'corporate', 'other'], schema: businessType.optional(), label: 'Business type' },
       'profile.email': { type: 'text', schema: email.optional(), label: 'Email' },
-      'profile.mobile': { type: 'text', schema: mobile.optional(), label: 'Profile mobile' },
+      'profile.mobile': { type: 'text', readonly: true, label: 'Profile mobile' },
     },
     money: ['creditLimit'],
     serialize: (u) => ({ ...u, creditLimit: Number(u.creditLimit) / 100, ordersCount: u._count?.orders ?? 0, addressesCount: u._count?.addresses ?? 0, _count: undefined,
@@ -208,11 +208,19 @@ const TABLES = {
   devices: { model: 'deviceToken', label: 'Device tokens', id: 'token', search: ['token', 'platform'], order: { updatedAt: 'desc' },
     fields: { token: { type: 'text', readonly: true, key: true }, userId: { type: 'ref', ref: 'users', readonly: true }, platform: { type: 'text', readonly: true }, updatedAt: { type: 'text', readonly: true } }, noCreate: true, noUpdate: true },
   otp: { model: 'otpCode', label: 'OTP codes', id: 'mobile', search: ['mobile'], order: { expiresAt: 'desc' },
-    fields: { mobile: { type: 'text', readonly: true, key: true }, expiresAt: { type: 'text', readonly: true }, attempts: { type: 'number', readonly: true } }, noCreate: true, noUpdate: true,
+    fields: { mobile: { type: 'text', readonly: true, key: true }, purpose: { type: 'text', readonly: true }, sentAt: { type: 'text', readonly: true }, expiresAt: { type: 'text', readonly: true }, attempts: { type: 'number', readonly: true } },
+    // The primary key is (mobile, purpose), so a row cannot be addressed by one
+    // id: the console lists these and nothing more. Codes are never returned.
+    noCreate: true, noUpdate: true, listOnly: true,
     serialize: (o) => ({ ...o, codeHash: undefined }) },
 };
 
 const table = (name) => { const t = TABLES[name]; if (!t) throw new ApiError(404, `Unknown table "${name}".`); return t; };
+const rowTable = (name) => {
+  const t = table(name);
+  if (t.listOnly) throw new ApiError(400, `"${t.label}" can only be listed.`);
+  return t;
+};
 const json = (v) => JSON.parse(JSON.stringify(v, (_k, x) => (typeof x === 'bigint' ? Number(x) : x)));
 const serialize = (t, row) => json(t.serialize ? t.serialize(row) : row);
 
@@ -229,7 +237,7 @@ function schemaFor(t, mode) {
 const r = Router();
 
 r.get('/', (_req, res) => ok(res, Object.entries(TABLES).map(([name, t]) => ({
-  name, label: t.label, id: t.id, noCreate: !!t.noCreate, noUpdate: !!t.noUpdate,
+  name, label: t.label, id: t.id, noCreate: !!t.noCreate, noUpdate: !!t.noUpdate, listOnly: !!t.listOnly,
   fields: Object.entries(t.fields).map(([k, f]) => ({ name: k, label: f.label || k, type: f.type, options: f.options, ref: f.ref, readonly: !!f.readonly, key: !!f.key, create: !!f.create, hint: f.hint })),
 }))));
 
@@ -252,7 +260,7 @@ r.get('/:table', asyncHandler(async (req, res) => {
 }));
 
 r.get('/:table/:id', asyncHandler(async (req, res) => {
-  const t = table(req.params.table);
+  const t = rowTable(req.params.table);
   const row = await prisma[t.model].findUnique({ where: { [t.id]: req.params.id }, include: t.include });
   if (!row) throw new ApiError(404, 'Row not found.');
   ok(res, serialize(t, row));
@@ -273,7 +281,7 @@ r.post('/:table', asyncHandler(async (req, res) => {
 }));
 
 r.put('/:table/:id', asyncHandler(async (req, res) => {
-  const t = table(req.params.table);
+  const t = rowTable(req.params.table);
   if (t.noUpdate) throw new ApiError(400, `Rows in "${t.label}" cannot be edited.`);
   const existing = await prisma[t.model].findUnique({ where: { [t.id]: req.params.id } });
   if (!existing) throw new ApiError(404, 'Row not found.');
@@ -289,7 +297,7 @@ r.put('/:table/:id', asyncHandler(async (req, res) => {
 }));
 
 r.delete('/:table/:id', asyncHandler(async (req, res) => {
-  const t = table(req.params.table);
+  const t = rowTable(req.params.table);
   const existing = await prisma[t.model].findUnique({ where: { [t.id]: req.params.id } });
   if (!existing) throw new ApiError(404, 'Row not found.');
   if (t.guardDelete) await t.guardDelete(req.params.id);

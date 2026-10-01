@@ -21,6 +21,13 @@ enum UserRole {
   admin
 }
 
+// An OTP is only valid for the thing it was sent for: a sign-in code can never
+// be used to move an account to a new number, or the other way round.
+enum OtpPurpose {
+  login
+  mobileChange
+}
+
 enum BusinessType {
   retailer
   wholesaler
@@ -134,12 +141,28 @@ model BusinessProfile {
 }
 
 model OtpCode {
-  mobile    String   @id @db.Char(10)
-  codeHash  String   @map("code_hash")
-  expiresAt DateTime @map("expires_at")
-  attempts  Int      @default(0)
+  mobile    String     @db.Char(10)
+  purpose   OtpPurpose @default(login)
+  codeHash  String     @map("code_hash")
+  expiresAt DateTime   @map("expires_at")
+  sentAt    DateTime   @default(now()) @map("sent_at")
+  attempts  Int        @default(0)
 
+  @@id([mobile, purpose])
   @@map("otp_codes")
+}
+
+/// Cache for India Post PIN lookups, so the address form fills city and state
+/// without hitting the upstream service on every keystroke and keeps working
+/// for known PINs while that service is down.
+model Pincode {
+  pincode   String   @id @db.Char(6)
+  city      String
+  district  String
+  state     String
+  fetchedAt DateTime @default(now()) @map("fetched_at")
+
+  @@map("pincodes")
 }
 
 model Address {

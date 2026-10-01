@@ -6,6 +6,7 @@ import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { mobile, pincode } from './_schemas.js';
+import { lookupPincode } from '../services/pincodes.js';
 
 const body = z.object({
   contactName: z.string().trim().min(2, 'Contact name is required'),
@@ -22,6 +23,14 @@ const body = z.object({
 
 const r = Router();
 r.use(requireAuth);
+
+// City + state for a PIN, so the buyer types six digits instead of two fields.
+// Declared before /:id so "pincode" is never read as an address id.
+r.get('/pincode/:pincode', asyncHandler(async (req, res) => {
+  const parsed = pincode.safeParse(req.params.pincode);
+  if (!parsed.success) throw new ApiError(400, 'Enter a valid 6-digit PIN code.');
+  ok(res, await lookupPincode(parsed.data));
+}));
 
 r.get('/', asyncHandler(async (req, res) => {
   ok(res, await prisma.address.findMany({ where: { userId: req.user.id }, orderBy: [{ isDefault: 'desc' }, { createdAt: 'asc' }] }));

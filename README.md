@@ -62,3 +62,32 @@ through one generic, validated CRUD surface used by the website's admin panel:
 Tables: categories, products, users, addresses, orders, payments, quotes,
 leads, notifications, team, devices (read/delete), otp (read/delete).
 System-generated tables (payments, quotes, devices, otp) cannot be created by hand.
+
+
+## Changing the registered mobile number (`/api/v1/auth/mobile/change`)
+
+The contact number used to change without verification. It cannot any more:
+`PUT /auth/profile` ignores any `mobile` in the body and always stores the
+account's own verified number, so the only way to move an account is:
+
+| Route | Purpose |
+|---|---|
+| `POST /auth/mobile/change/send` | authenticated; sends a code to the **new** number. Refuses your current number (400) and a number another account owns (409) |
+| `POST /auth/mobile/change/verify` | authenticated; on the correct code updates `users.mobile` and the profile's contact mobile in one transaction, bumps `tokenVersion` (other devices are signed out) and returns a fresh token |
+
+OTP codes are now bound to what they were issued for (`otp_codes.purpose`,
+`login` or `mobileChange`), and the purpose is part of the hash — a sign-in code
+can never complete a number change. Each code lives 5 minutes, dies after 5
+wrong attempts, and cannot be re-sent within 60 seconds (`otp_codes.sent_at`).
+The OTP endpoints are rate limited twice: generously per IP (a shop shares one)
+and per mobile number, which is the limit that matters.
+
+## PIN code lookup (`GET /api/v1/addresses/pincode/:pincode`)
+
+Authenticated. Returns `{ pincode, city, district, state }` from India Post
+(`api.postalpincode.in`), cached in the `pincodes` table — the second lookup of
+a PIN is served from our own database. A PIN that does not exist answers 404; a
+PIN we have never seen while the upstream service is unreachable answers 503, and
+a stale cached row is preferred over failing. No API key and no new environment
+variable: the service is free and unauthenticated. The address form always
+allows typing the city and state by hand.
