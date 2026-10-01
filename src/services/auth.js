@@ -4,7 +4,7 @@
 import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma.js';
-import { env, adminMobiles } from '../config/env.js';
+import { env, adminMobiles, isProd } from '../config/env.js';
 import { ApiError } from '../middleware/error.js';
 import { sendSms } from './sms.js';
 import { toRupees } from '../utils/money.js';
@@ -42,7 +42,14 @@ export async function issueOtp(mobile, purpose = 'login') {
     update: { codeHash, expiresAt, sentAt, attempts: 0 },
   });
   await sendSms(mobile, { otp: code });
-  return { mobile, expiresAt };
+
+  // Development convenience: with the console driver the code is already
+  // printed in plain text in this server's log, so also handing it back lets
+  // the app show it on screen instead of making the developer read the log.
+  // Both guards must hold — a production deployment never returns a code, even
+  // if it is somehow still on the console driver.
+  const devCode = !isProd && env.SMS_DRIVER === 'console' ? code : undefined;
+  return { mobile, expiresAt, ...(devCode && { devCode }) };
 }
 
 export const sendOtp = (mobile) => issueOtp(mobile, 'login');

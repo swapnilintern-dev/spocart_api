@@ -39,6 +39,26 @@ describe('public api', () => {
     }
   });
 
+  // Development convenience: with the console driver the code is already in
+  // this server's log in plain text, so it also comes back in the response and
+  // the app can show it. The production guard (isProd) cannot be exercised here
+  // because the environment is read once at import; it was checked by hand with
+  // a NODE_ENV=production server on the same console driver, which omitted it.
+  it('a development server hands the OTP back so the app can show it', async () => {
+    const res = await request(app)
+      .post('/api/v1/auth/otp/send')
+      .send({ mobile: '9876500011' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.devCode).toMatch(/^\d{6}$/);
+
+    const verified = await request(app)
+      .post('/api/v1/auth/otp/verify')
+      .send({ mobile: '9876500011', code: res.body.data.devCode });
+    expect(verified.status).toBe(200);
+    expect(verified.body.data.user.mobile).toBe('9876500011');
+    expect(verified.body.data.token).toBeTruthy();
+  });
+
   it('sign-in methods are advertised', async () => {
     const res = await request(app).get('/api/v1/auth/methods');
     expect(res.status).toBe(200);
