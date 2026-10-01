@@ -242,11 +242,16 @@ model Product {
   popular      Boolean       @default(false)
   customisable Boolean       @default(false)
   active       Boolean       @default(true)
+
+  /// Pinned to the top of Best Sellers by an admin; null means not pinned.
+  /// A new launch has no sales yet, so it cannot rank on its own.
+  featuredRank Int?          @map("featured_rank")
   tiers        ProductTier[]
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
 
   @@index([categoryId])
+  @@index([featuredRank])
   @@map("products")
 }
 
@@ -304,6 +309,7 @@ model OrderItem {
   size      String?
 
   @@index([orderId])
+  @@index([productId])
   @@map("order_items")
 }
 

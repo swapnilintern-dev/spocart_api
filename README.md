@@ -152,3 +152,27 @@ PIN we have never seen while the upstream service is unreachable answers 503, an
 a stale cached row is preferred over failing. No API key and no new environment
 variable: the service is free and unauthenticated. The address form always
 allows typing the city and state by hand.
+
+
+## Best sellers (`/api/v1/catalog/best-sellers`)
+
+Ranked from real order lines, not a hand-set flag.
+
+| Route | Purpose |
+|---|---|
+| `GET /catalog/best-sellers?limit=10` | public; product ids in rank order for the home rail |
+| `GET /admin/best-sellers?limit=25` | admin; units and order count per product over the window |
+| `PUT /admin/products/:id/pin` `{rank}` | pins a product to the front (a new launch has no sales to rank on) |
+| `DELETE /admin/products/:id/pin` | unpins it |
+
+Counted over the last 30 days from `order_items`, and only for orders that are a
+real sale — `placed`, `packed`, `dispatched`, `outForDelivery`, `delivered`.
+Cancelled and still-unpaid orders are excluded, so an abandoned checkout cannot
+push a product up the list. Inactive products are dropped from the result.
+
+Pinned products (`products.featured_rank`, lower first) come before the sales
+ranking. The ranking is held in process for 10 minutes and cleared immediately
+whenever a product is pinned, unpinned or edited through the admin console.
+
+The endpoint returns ids only: the app already holds the catalogue and resolves
+them itself, so the rail costs one small request.

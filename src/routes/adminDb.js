@@ -9,6 +9,7 @@ import { prisma } from '../db/prisma.js';
 import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { validateTiers } from '../services/pricing.js';
+import { clearBestSellerCache } from '../services/bestSellers.js';
 import { mobile, gstin, pincode, email, businessType } from './_schemas.js';
 import { canonicalImageUrl } from '../services/storage.js';
 
@@ -53,6 +54,7 @@ const TABLES = {
       popular: { type: 'bool', schema: z.boolean() },
       customisable: { type: 'bool', schema: z.boolean() },
       active: { type: 'bool', schema: z.boolean() },
+      featuredRank: { type: 'number', schema: z.number().int().min(1).max(999).nullable(), hint: 'Pins the product to the top of Best Sellers; empty = not pinned' },
       tiers: { type: 'tiers', schema: z.array(z.object({ minQty: z.number().int().positive(), unitPrice: money })).min(1), virtual: true },
     },
     serialize: (p) => ({ ...p, rating: Number(p.rating), tiers: (p.tiers || []).map((t) => ({ minQty: t.minQty, unitPrice: Number(t.unitPrice) / 100 })) }),
@@ -67,6 +69,7 @@ const TABLES = {
     },
     afterWrite: async (tx, row, data) => {
       if (data.__tiers) { await tx.productTier.deleteMany({ where: { productId: row.id } }); await tx.productTier.createMany({ data: data.__tiers.map((t) => ({ ...t, productId: row.id })) }); }
+      clearBestSellerCache();   // active / pin changes must show up straight away
     },
     guardDelete: async (id) => { const n = await prisma.orderItem.count({ where: { productId: id } }); if (n) throw new ApiError(400, `${n} order line(s) reference this product. Set active=false instead of deleting.`); },
   },

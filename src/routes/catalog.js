@@ -4,6 +4,7 @@ import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { toRupees } from '../utils/money.js';
 import { absoluteUrl } from '../services/orders.js';
+import { bestSellerIds } from '../services/bestSellers.js';
 
 const r = Router();
 const cache = (_req, res, next) => { res.set('Cache-Control', 'public, max-age=300'); next(); };
@@ -28,8 +29,19 @@ export const serializeProduct = (p) => ({
   inStock: p.inStock,
   popular: p.popular,
   customisable: p.customisable,
+  pinned: p.featuredRank != null,
   tiers: p.tiers.map((t) => ({ minQty: t.minQty, unitPrice: toRupees(t.unitPrice) })),
 });
+
+/**
+ * Best sellers for the home rail: product ids in rank order, newest sales data
+ * within the last 30 days, pinned products first. Public — the home screen is
+ * shown before sign-in.
+ */
+r.get('/best-sellers', cache, asyncHandler(async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 30);
+  ok(res, { productIds: await bestSellerIds({ limit }) });
+}));
 
 r.get('/categories', cache, asyncHandler(async (_req, res) => {
   const rows = await prisma.category.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } });

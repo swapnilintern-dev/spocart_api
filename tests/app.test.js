@@ -66,6 +66,25 @@ describe('public api', () => {
     expect(typeof res.body.data.firebase).toBe('boolean');
   });
 
+  it('best sellers are public and ranked ids only', async () => {
+    const res = await request(app).get('/api/v1/catalog/best-sellers?limit=5');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.data.productIds)).toBe(true);
+    expect(res.body.data.productIds.length).toBeLessThanOrEqual(5);
+    // Ids only — the app already has the catalogue and resolves them itself.
+    for (const id of res.body.data.productIds) expect(typeof id).toBe('string');
+  });
+
+  it('pinning a product to Best Sellers is admin-only', async () => {
+    const pin = await request(app)
+      .put('/api/v1/admin/products/ck-ss-ball/pin')
+      .send({ rank: 1 });
+    expect(pin.status).toBe(401);
+
+    const report = await request(app).get('/api/v1/admin/best-sellers');
+    expect(report.status).toBe(401);
+  });
+
   it('the PIN lookup is not public', async () => {
     const res = await request(app).get('/api/v1/addresses/pincode/411001');
     expect(res.status).toBe(401);

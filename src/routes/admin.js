@@ -16,6 +16,7 @@ import { notify } from '../services/notify.js';
 import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
 import adminDb from './adminDb.js';
+import { bestSellerReport, clearBestSellerCache } from '../services/bestSellers.js';
 import multer from 'multer';
 import path from 'node:path';
 import { storeFile, canonicalImageUrl } from '../services/storage.js';
@@ -205,6 +206,37 @@ r.put('/products/:id', validate(productBody.partial({ id: true }).extend({ id: z
 r.patch('/products/:id/stock', validate(z.object({ inStock: z.boolean() })), asyncHandler(async (req, res) => {
   await prisma.product.update({ where: { id: req.params.id }, data: { inStock: req.body.inStock } });
   ok(res, { id: req.params.id, inStock: req.body.inStock });
+}));
+
+// ── Best sellers ────────────────────────────────────────────────────────────
+// What actually sold in the last 30 days, and the pin that puts a product on
+// the home rail regardless — a new launch has no sales history to rank on.
+
+r.get('/best-sellers', asyncHandler(async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+  ok(res, await bestSellerReport({ limit }));
+}));
+
+r.put('/products/:id/pin', validate(z.object({
+  rank: z.number().int().min(1).max(999).default(1),
+})), asyncHandler(async (req, res) => {
+  const product = await prisma.product.update({
+    where: { id: req.params.id },
+    data: { featuredRank: req.body.rank },
+    select: { id: true, name: true, featuredRank: true },
+  });
+  clearBestSellerCache();
+  ok(res, product);
+}));
+
+r.delete('/products/:id/pin', asyncHandler(async (req, res) => {
+  const product = await prisma.product.update({
+    where: { id: req.params.id },
+    data: { featuredRank: null },
+    select: { id: true, name: true, featuredRank: true },
+  });
+  clearBestSellerCache();
+  ok(res, product);
 }));
 
 r.post('/categories', validate(z.object({
