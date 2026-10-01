@@ -96,6 +96,20 @@ enum QuoteStatus {
   declined
 }
 
+enum PromotionAudience {
+  all
+  registered
+  unregistered
+}
+
+/// Where tapping a promotion takes the buyer. `none` is a pure announcement.
+enum PromotionLinkType {
+  none
+  product
+  category
+  url
+}
+
 enum NotificationType {
   orderPlaced
   orderShipped
@@ -246,6 +260,15 @@ model Product {
   /// Pinned to the top of Best Sellers by an admin; null means not pinned.
   /// A new launch has no sales yet, so it cannot rank on its own.
   featuredRank Int?          @map("featured_rank")
+
+  /// Official product video (YouTube). Validated on write; null means none.
+  videoUrl     String?       @map("video_url")
+
+  /// Units on hand. Null means stock is not tracked for this product — the app
+  /// then says nothing about how many are left rather than inventing scarcity.
+  stockQty     Int?          @map("stock_qty")
+
+  priceChanges PriceChange[]
   tiers        ProductTier[]
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
@@ -409,6 +432,46 @@ model Lead {
 }
 
 /// Atomic, gap-free counters for SC-2025-0345 / INV-… / QT-… ids.
+/// Every genuine change to a product's entry price, so "price drop" on the
+/// Deals shelf is a fact we can point at rather than a marketing claim.
+model PriceChange {
+  id        BigInt   @id @default(autoincrement())
+  productId String   @map("product_id")
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  oldPrice  BigInt   @map("old_price")
+  newPrice  BigInt   @map("new_price")
+  changedAt DateTime @default(now()) @map("changed_at")
+
+  /// Set once the buyers who bought this product have been told, so a drop
+  /// never produces two notifications.
+  notified  Boolean  @default(false)
+
+  @@index([productId, changedAt])
+  @@index([changedAt])
+  @@map("price_changes")
+}
+
+/// Offers and announcements, controlled entirely from the admin panel.
+model Promotion {
+  id         String            @id @default(uuid()) @db.Uuid
+  title      String
+  body       String
+  imageUrl   String?           @map("image_url")
+  linkType   PromotionLinkType @default(none) @map("link_type")
+  linkTarget String?           @map("link_target")
+  audience   PromotionAudience @default(all)
+  startsAt   DateTime          @map("starts_at")
+  endsAt     DateTime          @map("ends_at")
+
+  /// Higher wins when more than one promotion is live.
+  priority   Int               @default(0)
+  active     Boolean           @default(true)
+  createdAt  DateTime          @default(now()) @map("created_at")
+
+  @@index([active, startsAt, endsAt])
+  @@map("promotions")
+}
+
 model IdCounter {
   prefix String
   year   Int
