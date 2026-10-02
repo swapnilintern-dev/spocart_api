@@ -121,6 +121,35 @@ describe('public api', () => {
     }
   });
 
+  it('a review cannot be written without signing in', async () => {
+    const res = await request(app)
+      .put('/api/v1/reviews/ck-kashmir-willow-bat')
+      .send({ rating: 5, body: 'Trying to post without an account.' });
+    expect(res.status).toBe(401);
+  });
+
+  it('a product\'s reviews are public and only ever approved ones', async () => {
+    const res = await request(app).get('/api/v1/catalog/products/ck-kashmir-willow-bat/reviews');
+    expect(res.status).toBe(200);
+    expect(res.body.data).toHaveProperty('average');
+    expect(res.body.data).toHaveProperty('breakdown');
+    for (const r of res.body.data.reviews) {
+      expect(r.status).toBe('approved');
+      // Eligibility was proved server-side, so this is never a client claim.
+      expect(r.verifiedBuyer).toBe(true);
+      // A reviewer is recognisable but never fully exposed.
+      expect(r.author).not.toMatch(/^[6-9]\d{9}$/);
+    }
+  });
+
+  it('review moderation is admin-only', async () => {
+    expect((await request(app).get('/api/v1/admin/reviews')).status).toBe(401);
+    expect(
+      (await request(app).put('/api/v1/admin/reviews/00000000-0000-0000-0000-000000000000/status')
+        .send({ status: 'hidden' })).status,
+    ).toBe(401);
+  });
+
   it('managing offers is admin-only', async () => {
     const res = await request(app).post('/api/v1/admin/db/promotions').send({ title: 'Nope', body: 'Nope' });
     expect(res.status).toBe(401);

@@ -10,6 +10,7 @@ import uploads from './uploads.js';
 import notifications from './notifications.js';
 import leads from './leads.js';
 import promotions from './promotions.js';
+import reviews from './reviews.js';
 import admin from './admin.js';
 
 const r = Router();
@@ -24,5 +25,6 @@ r.use('/uploads', uploads);
 r.use('/notifications', notifications);
 r.use('/leads', leads);
 r.use('/promotions', promotions);
+r.use('/reviews', reviews);
 r.use('/admin', admin);
 export default r;

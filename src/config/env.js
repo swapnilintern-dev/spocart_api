@@ -22,6 +22,9 @@ const schema = z.object({
   CORS_ORIGINS: z.string().default(''),
   ADMIN_MOBILES: z.string().default(''),
   UNPAID_ORDER_TTL_MINUTES: z.coerce.number().default(30),
+  // 'auto' publishes a verified buyer's review straight away and lets an admin
+  // hide it; 'manual' holds every review until an admin approves it.
+  REVIEW_MODERATION: z.enum(['auto', 'manual']).default('auto'),
   // File storage. All three must be set to use Cloudinary; otherwise uploads
   // fall back to local disk (fine for development, wiped on every Render deploy).
   CLOUDINARY_CLOUD_NAME: z.string().optional(),

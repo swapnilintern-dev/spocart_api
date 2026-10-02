@@ -96,6 +96,14 @@ enum QuoteStatus {
   declined
 }
 
+/// A review is visible only once it is `approved`. Which state a new review
+/// starts in is set by REVIEW_MODERATION.
+enum ReviewStatus {
+  pending
+  approved
+  hidden
+}
+
 enum PromotionAudience {
   all
   registered
@@ -136,6 +144,7 @@ model User {
   quotes        Quote[]
   notifications Notification[]
   devices       DeviceToken[]
+  reviews       Review[]
 
   @@map("users")
 }
@@ -269,6 +278,7 @@ model Product {
   stockQty     Int?          @map("stock_qty")
 
   priceChanges PriceChange[]
+  reviews      Review[]
   tiers        ProductTier[]
   createdAt    DateTime      @default(now()) @map("created_at")
   updatedAt    DateTime      @updatedAt @map("updated_at")
@@ -432,6 +442,37 @@ model Lead {
 }
 
 /// Atomic, gap-free counters for SC-2025-0345 / INV-… / QT-… ids.
+/// A buyer's review of a product they actually received. Eligibility is proved
+/// by `orderId`: a delivered order of theirs that contained this product.
+model Review {
+  id        String       @id @default(uuid()) @db.Uuid
+  productId String       @map("product_id")
+  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    String       @map("user_id") @db.Uuid
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// The delivered order that earned the right to review. Kept so the badge
+  /// "Verified buyer" is a fact, not a flag the client sent.
+  orderId   String       @map("order_id")
+
+  rating    Int
+  title     String       @default("")
+  body      String
+  photos    String[]     @default([])
+  status    ReviewStatus @default(approved)
+
+  /// Set by an admin when hiding a review, for the audit trail.
+  adminNote String?      @map("admin_note")
+  createdAt DateTime     @default(now()) @map("created_at")
+  updatedAt DateTime     @updatedAt @map("updated_at")
+
+  /// One review per buyer per product; editing replaces it.
+  @@unique([productId, userId])
+  @@index([productId, status, createdAt])
+  @@index([status, createdAt])
+  @@map("reviews")
+}
+
 /// Every genuine change to a product's entry price, so "price drop" on the
 /// Deals shelf is a fact we can point at rather than a marketing claim.
 model PriceChange {

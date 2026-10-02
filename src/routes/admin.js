@@ -19,6 +19,7 @@ import adminDb from './adminDb.js';
 import { bestSellerReport, clearBestSellerCache } from '../services/bestSellers.js';
 import { recordPriceChange, entryPrice, notifyPriceDrops } from '../services/deals.js';
 import { canonicalVideoUrl } from '../services/videoUrl.js';
+import { reviewQueue, moderateReview } from '../services/reviews.js';
 import multer from 'multer';
 import path from 'node:path';
 import { storeFile, canonicalImageUrl } from '../services/storage.js';
@@ -229,6 +230,21 @@ r.patch('/products/:id/stock', validate(z.object({ inStock: z.boolean() })), asy
 // ── Best sellers ────────────────────────────────────────────────────────────
 // What actually sold in the last 30 days, and the pin that puts a product on
 // the home rail regardless — a new launch has no sales history to rank on.
+
+// ── Review moderation ───────────────────────────────────────────────────────
+r.get('/reviews', asyncHandler(async (req, res) => {
+  const status = ['pending', 'approved', 'hidden'].includes(req.query.status) ? req.query.status : undefined;
+  const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
+  ok(res, await reviewQueue({ status, offset, limit }));
+}));
+
+r.put('/reviews/:id/status', validate(z.object({
+  status: z.enum(['pending', 'approved', 'hidden']),
+  adminNote: z.string().trim().max(500).optional(),
+})), asyncHandler(async (req, res) => {
+  ok(res, await moderateReview(req.params.id, req.body.status, req.body.adminNote));
+}));
 
 r.post('/price-drops/notify', asyncHandler(async (_req, res) => {
   ok(res, await notifyPriceDrops());

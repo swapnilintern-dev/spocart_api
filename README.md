@@ -205,3 +205,31 @@ a second round, and the 5-minute cron sends them.
 Product video is an official YouTube link. Any `watch` / `youtu.be` / `embed` /
 `shorts` / `m.youtube` form is accepted on write, stored canonically, and served
 with its thumbnail; anything else is refused.
+
+
+## Reviews (`/api/v1/reviews`, `/api/v1/catalog/products/:id/reviews`)
+
+| Route | Who |
+|---|---|
+| `GET /catalog/products/:id/reviews` | public (optional auth marks which one is yours); approved reviews, newest first, with the star breakdown |
+| `GET /reviews/pending` | buyer; products they have received and not yet reviewed |
+| `PUT /reviews/:productId` | buyer; writes **or edits** their one review of that product |
+| `DELETE /reviews/:reviewId` | the author, or an admin |
+| `GET /admin/reviews?status=` | moderation queue |
+| `PUT /admin/reviews/:id/status` | approve / hide, with an optional note |
+
+**Eligibility is proved, not claimed.** A review is only accepted when the buyer
+has a **delivered** order of their own containing that product; the order id is
+stored on the review, which is what makes "Verified buyer" a fact rather than a
+flag the client sent. One review per buyer per product — submitting again
+replaces it, so there is no way to stuff the rating.
+
+`products.rating` and `products.review_count` are **recomputed from the approved
+reviews** on every write, moderation change and delete, so the stars on a
+product card always match the reviews behind them. A product with no approved
+reviews reads 0 rather than keeping a stale average.
+
+`REVIEW_MODERATION` chooses the starting state: `auto` (the default) publishes a
+verified buyer's review immediately and lets an admin hide it; `manual` holds
+every review for approval. Reviewer names show the business name, or a masked
+mobile number — never the full number.

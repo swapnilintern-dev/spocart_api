@@ -7,6 +7,8 @@ import { absoluteUrl } from '../services/orders.js';
 import { bestSellerIds } from '../services/bestSellers.js';
 import { deals, entryPrice, LOW_STOCK_THRESHOLD } from '../services/deals.js';
 import { videoThumbnailUrl } from '../services/videoUrl.js';
+import { reviewsFor } from '../services/reviews.js';
+import { optionalAuth } from '../middleware/auth.js';
 
 const r = Router();
 const cache = (_req, res, next) => { res.set('Cache-Control', 'public, max-age=300'); next(); };
@@ -83,6 +85,16 @@ r.get('/new-launches', cache, asyncHandler(async (req, res) => {
     take: limit,
   });
   ok(res, rows.map(serializeProduct));
+}));
+
+/**
+ * A product's approved reviews with the star breakdown. Public, and optionally
+ * authenticated so a buyer can see which one is theirs.
+ */
+r.get('/products/:id/reviews', optionalAuth, asyncHandler(async (req, res) => {
+  const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 50);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
+  ok(res, await reviewsFor(req.params.id, { offset, limit, userId: req.user?.id }));
 }));
 
 r.get('/categories', cache, asyncHandler(async (_req, res) => {
