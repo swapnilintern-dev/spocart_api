@@ -12,6 +12,7 @@ import leads from './leads.js';
 import promotions from './promotions.js';
 import reviews from './reviews.js';
 import rewards from './rewards.js';
+import events from './events.js';
 import admin from './admin.js';
 
 const r = Router();
@@ -28,5 +29,6 @@ r.use('/leads', leads);
 r.use('/promotions', promotions);
 r.use('/reviews', reviews);
 r.use('/rewards', rewards);
+r.use('/events', events);
 r.use('/admin', admin);
 export default r;

@@ -281,3 +281,34 @@ re-read inside the transaction so two taps cannot spend the same credits.
 
 **Still needed from the business:** the gift slabs from the rewards spreadsheet,
 and the decision between a streak and purchase-based credits.
+
+
+## Analytics (`POST /api/v1/events`, `GET /api/v1/admin/analytics/*`)
+
+Two kinds of number, never mixed:
+
+| | Source | Labelled |
+|---|---|---|
+| Active users, the cart funnel, product interest, search health | `usage_events`, reported by the app | `estimate: true` |
+| Sales, GST, buyer activity | the `orders` themselves | `estimate: false` |
+
+A phone's report can be lost offline or sent twice, so counts of behaviour are
+estimates and say so. **Money is never read from an event** — a sales figure is
+an accounting fact and cannot depend on whether a report arrived.
+
+| Route | Returns |
+|---|---|
+| `POST /events` | the app's batch (optional auth — visits before sign-in count) |
+| `GET /admin/analytics/active-users?days=` | DAU, MAU and the ratio, by device and by signed-in buyer, with a daily series |
+| `GET /admin/analytics/funnel?days=` | opened → viewed → added → checkout → ordered, by device |
+| `GET /admin/analytics/products?days=` | most-viewed products and how often a view becomes a cart line |
+| `GET /admin/analytics/search?days=` | how often a search comes back empty |
+| `GET /admin/analytics/sales?from=&to=` | orders, buyers, subtotal, GST, total, average, daily series |
+| `GET /admin/analytics/buyers?quietDays=` | who orders, what they spend, and who has gone quiet |
+
+**Nothing a buyer typed is stored.** An event's `meta` is filtered down to whole
+numbers under four known keys (`results`, `queryLength`, `quantity`,
+`position`); a search records how long the query was and whether it matched,
+never the query. An unrecognised event name is dropped rather than stored, so a
+later app version cannot write junk into the table. `deviceId` identifies an
+install so an anonymous visitor is counted once — it is not a person.

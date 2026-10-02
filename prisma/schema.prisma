@@ -96,6 +96,17 @@ enum QuoteStatus {
   declined
 }
 
+/// What the app reported happening. Deliberately a short, fixed list: these are
+/// counts for the business, never a place to put anything about a person.
+enum UsageEventName {
+  appOpen
+  productView
+  search
+  addToCart
+  checkoutStart
+  orderPlaced
+}
+
 /// Why credits moved. Every entry in the ledger carries one, so a balance can
 /// always be explained line by line.
 enum CreditReason {
@@ -639,6 +650,38 @@ model RewardClaim {
   @@unique([userId, tierId])
   @@index([status, createdAt])
   @@map("reward_claims")
+}
+
+/// One thing the app did. Used for active-user counts and the cart funnel —
+/// never for money, which is always read from `orders`.
+///
+/// A row carries no free text from the buyer: a search records only how long
+/// the query was and whether it matched, so nothing anyone typed is stored.
+model UsageEvent {
+  id        BigInt         @id @default(autoincrement())
+  name      UsageEventName
+
+  /// Null before sign-in: the home screen is browsable without an account.
+  userId    String?        @map("user_id") @db.Uuid
+
+  /// Stable per install, so an anonymous visitor is still counted once.
+  deviceId  String         @map("device_id")
+  platform  String         @default("")
+  productId String?        @map("product_id")
+  orderId   String?        @map("order_id")
+
+  /// Counts only — result totals, query length. Never a query, name or number.
+  meta      Json           @default("{}")
+  at        DateTime       @default(now())
+
+  /// The local day the event belongs to, so a day's count is one index lookup.
+  day       String         @db.Char(10)
+
+  @@index([day, name])
+  @@index([name, at])
+  @@index([userId, day])
+  @@index([deviceId, day])
+  @@map("usage_events")
 }
 
 model IdCounter {

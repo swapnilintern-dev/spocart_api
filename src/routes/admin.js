@@ -16,6 +16,9 @@ import { notify } from '../services/notify.js';
 import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
 import { toRupees } from '../utils/money.js';
+import {
+  activeUsers, funnel, productInterest, searchHealth, salesReport, buyerActivity,
+} from '../services/analytics.js';
 import adminDb from './adminDb.js';
 import { bestSellerReport, clearBestSellerCache } from '../services/bestSellers.js';
 import { recordPriceChange, entryPrice, notifyPriceDrops } from '../services/deals.js';
@@ -238,6 +241,42 @@ r.patch('/products/:id/stock', validate(z.object({ inStock: z.boolean() })), asy
 // ── Best sellers ────────────────────────────────────────────────────────────
 // What actually sold in the last 30 days, and the pin that puts a product on
 // the home rail regardless — a new launch has no sales history to rank on.
+
+// ── Analytics ───────────────────────────────────────────────────────────────
+// Counts of what people did are estimates reported by the app, and say so.
+// Money is read from the orders themselves and never from an event.
+
+const window = (req) => Math.min(Math.max(Number(req.query.days) || 30, 1), 365);
+
+r.get('/analytics/active-users', asyncHandler(async (req, res) => {
+  ok(res, await activeUsers({ days: window(req) }));
+}));
+
+r.get('/analytics/funnel', asyncHandler(async (req, res) => {
+  ok(res, await funnel({ days: window(req) }));
+}));
+
+r.get('/analytics/products', asyncHandler(async (req, res) => {
+  ok(res, await productInterest({
+    days: window(req),
+    limit: Math.min(Math.max(Number(req.query.limit) || 20, 1), 100),
+  }));
+}));
+
+r.get('/analytics/search', asyncHandler(async (req, res) => {
+  ok(res, await searchHealth({ days: window(req) }));
+}));
+
+r.get('/analytics/sales', asyncHandler(async (req, res) => {
+  ok(res, await salesReport({ from: req.query.from, to: req.query.to }));
+}));
+
+r.get('/analytics/buyers', asyncHandler(async (req, res) => {
+  ok(res, await buyerActivity({
+    quietDays: Math.min(Math.max(Number(req.query.quietDays) || 45, 7), 365),
+    limit: Math.min(Math.max(Number(req.query.limit) || 50, 1), 200),
+  }));
+}));
 
 // ── Rewards ─────────────────────────────────────────────────────────────────
 // The rules live in the database so turning the programme on, or switching
