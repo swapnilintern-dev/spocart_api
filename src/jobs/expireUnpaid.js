@@ -6,6 +6,7 @@ import { env } from '../config/env.js';
 import { minutesAgo } from '../utils/dates.js';
 import { reconcilePending } from '../services/reconcile.js';
 import { notifyPriceDrops } from '../services/deals.js';
+import { reverseOrderCredits } from '../services/rewards.js';
 
 export function startExpireUnpaidJob() {
   cron.schedule('*/5 * * * *', async () => {
@@ -22,6 +23,9 @@ export function startExpireUnpaidJob() {
         where: { id },
         data: { status: 'cancelled', statusUpdatedAt: new Date(), history: { create: { status: 'cancelled', note: 'Payment not completed' } } },
       });
+      // An unpaid order should not have earned credits, but reversing is free
+      // and keeps the ledger true whatever happened earlier.
+      await reverseOrderCredits(id).catch(() => null);
     }
     if (stale.length) console.log(`expireUnpaid: cancelled ${stale.length} unpaid order(s)`);
 

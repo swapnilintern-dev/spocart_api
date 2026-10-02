@@ -15,11 +15,18 @@ import { validateTiers } from '../services/pricing.js';
 import { notify } from '../services/notify.js';
 import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
+import { toRupees } from '../utils/money.js';
 import adminDb from './adminDb.js';
 import { bestSellerReport, clearBestSellerCache } from '../services/bestSellers.js';
 import { recordPriceChange, entryPrice, notifyPriceDrops } from '../services/deals.js';
 import { canonicalVideoUrl } from '../services/videoUrl.js';
 import { reviewQueue, moderateReview } from '../services/reviews.js';
+import {
+  settings as rewardSettings,
+  serializeSettings,
+  award,
+  balance as creditBalance,
+} from '../services/rewards.js';
 import multer from 'multer';
 import path from 'node:path';
 import { storeFile, canonicalImageUrl } from '../services/storage.js';
@@ -231,6 +238,88 @@ r.patch('/products/:id/stock', validate(z.object({ inStock: z.boolean() })), asy
 // ── Best sellers ────────────────────────────────────────────────────────────
 // What actually sold in the last 30 days, and the pin that puts a product on
 // the home rail regardless — a new launch has no sales history to rank on.
+
+// ── Rewards ─────────────────────────────────────────────────────────────────
+// The rules live in the database so turning the programme on, or switching
+// between a daily streak and purchase-based credits, is an admin edit.
+
+r.get('/rewards/settings', asyncHandler(async (_req, res) => {
+  ok(res, serializeSettings(await rewardSettings()));
+}));
+
+r.put('/rewards/settings', validate(z.object({
+  mode: z.enum(['purchase', 'streak', 'both']).optional(),
+  creditsPer100Rupees: z.number().int().min(0).max(10000).optional(),
+  creditValue: z.number().min(0).max(1000).optional(),
+  dailyCheckInCredits: z.number().int().min(0).max(10000).optional(),
+  referralCredits: z.number().int().min(0).max(100000).optional(),
+  maxRedeemPercent: z.number().int().min(0).max(100).optional(),
+  active: z.boolean().optional(),
+})), asyncHandler(async (req, res) => {
+  // creditPaiseValue is an Int column, not a money BigInt: one credit is worth
+  // a few paise, never an amount that needs 64 bits.
+  const { creditValue, ...rest } = req.body;
+  const paiseValue = creditValue == null ? null : Math.round(creditValue * 100);
+  const saved = await prisma.rewardSettings.upsert({
+    where: { id: 'default' },
+    create: { id: 'default', ...rest, ...(paiseValue != null && { creditPaiseValue: paiseValue }) },
+    update: { ...rest, ...(paiseValue != null && { creditPaiseValue: paiseValue }) },
+  });
+  ok(res, serializeSettings(saved));
+}));
+
+/** Who has reached a gift tier and not yet received it. */
+r.get('/rewards/claims', asyncHandler(async (req, res) => {
+  const status = ['earned', 'claimed', 'delivered'].includes(req.query.status) ? req.query.status : undefined;
+  const rows = await prisma.rewardClaim.findMany({
+    where: status ? { status } : {},
+    orderBy: { createdAt: 'desc' },
+    take: Math.min(Math.max(Number(req.query.limit) || 50, 1), 200),
+    include: {
+      tier: { select: { name: true, giftLabel: true, threshold: true } },
+      user: { select: { mobile: true, profile: { select: { businessName: true } } } },
+    },
+  });
+  ok(res, rows.map((c) => ({
+    id: c.id,
+    status: c.status,
+    buyer: c.user.profile?.businessName || c.user.mobile,
+    mobile: c.user.mobile,
+    tier: c.tier.name,
+    gift: c.tier.giftLabel,
+    threshold: toRupees(c.tier.threshold),
+    totalAtClaim: toRupees(c.totalAtClaim),
+    adminNote: c.adminNote,
+    at: c.createdAt.toISOString(),
+  })));
+}));
+
+r.put('/rewards/claims/:id', validate(z.object({
+  status: z.enum(['earned', 'claimed', 'delivered']),
+  adminNote: z.string().trim().max(500).optional(),
+})), asyncHandler(async (req, res) => {
+  const saved = await prisma.rewardClaim.update({
+    where: { id: req.params.id },
+    data: { status: req.body.status, adminNote: req.body.adminNote },
+  });
+  ok(res, { id: saved.id, status: saved.status });
+}));
+
+/** A manual correction, which lands in the buyer's ledger like any other. */
+r.post('/rewards/adjust', validate(z.object({
+  userId: uuid,
+  delta: z.number().int().refine((n) => n !== 0, 'Enter a non-zero number of credits'),
+  note: z.string().trim().min(3, 'Say why, so the buyer can see it'),
+})), asyncHandler(async (req, res) => {
+  const entry = await prisma.$transaction((tx) => award(tx, req.body.userId, {
+    delta: req.body.delta,
+    reason: 'adminAdjust',
+    // Unique per adjustment: a correction is deliberate, not an event to dedupe.
+    eventKey: `adjust:${req.body.userId}:${Date.now()}`,
+    note: req.body.note,
+  }));
+  ok(res, { credited: entry?.delta ?? 0, balance: await creditBalance(req.body.userId) });
+}));
 
 // ── Review moderation ───────────────────────────────────────────────────────
 r.get('/reviews', asyncHandler(async (req, res) => {

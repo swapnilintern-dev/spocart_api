@@ -244,3 +244,40 @@ the database console, which also searches by it.
 
 **No product carries a barcode yet** — scanning will keep reporting "no SPOCART
 product carries that barcode" until real codes are entered.
+
+
+## Rewards and credits (`/api/v1/rewards`)
+
+**The business decision is not made yet, so it is a setting, not code.** The CEO
+proposed a daily streak; purchase-based credits suit a trade buyer who orders
+once a week. `reward_settings` supports `purchase`, `streak` or `both`, and
+**every value starts at zero with `active` false** — nothing is earned or
+redeemed, and the app hides rewards entirely, until someone sets real numbers in
+the admin panel.
+
+| Route | Who |
+|---|---|
+| `GET /rewards` | buyer; balance, qualifying purchases, streak, gift tiers and progress |
+| `GET /rewards/ledger` | buyer; every movement, so a balance can be explained line by line |
+| `POST /rewards/check-in` | buyer; today's credits, once |
+| `GET /rewards/redeemable?total=` | buyer; how many credits may be spent on an order that size |
+| `GET` / `PUT /admin/rewards/settings` | the rules |
+| `GET` / `PUT /admin/rewards/claims` | who reached a gift tier, and marking it delivered |
+| `POST /admin/rewards/adjust` | a manual correction, which lands in the ledger like any other entry |
+
+Gift tiers and the ledger are also in the database console (`rewardTiers`,
+`rewardClaims`, `credits` — the ledger is read-only there, because history is
+not edited; corrections go through `/admin/rewards/adjust`).
+
+**A balance is always the sum of the ledger**, never a column that could drift.
+Every entry carries an `event_key` naming what it was for, written with
+`ON CONFLICT DO NOTHING`, so the same order, the same day's check-in or the same
+redemption can only ever count once — whether it arrives from the payment
+verify, the Razorpay webhook or the reconciler. Cancelling an order writes a
+reversing entry rather than deleting history. The check-in day is the server's,
+in Asia/Kolkata, so changing a phone's clock earns nothing. Redeeming is capped
+by the balance and by `max_redeem_percent` of the order, and the balance is
+re-read inside the transaction so two taps cannot spend the same credits.
+
+**Still needed from the business:** the gift slabs from the rewards spreadsheet,
+and the decision between a streak and purchase-based credits.

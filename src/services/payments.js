@@ -6,6 +6,7 @@ import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { ApiError } from '../middleware/error.js';
 import { notify } from './notify.js';
+import { creditForOrder, syncTiers } from './rewards.js';
 import { orderInclude } from './orders.js';
 import { razorpay } from './razorpay.js';
 
@@ -69,6 +70,12 @@ export async function markCaptured({ order, razorpayPaymentId, amount, method, r
       }
     }
     return tx.order.findUnique({ where: { id: order.id }, include: orderInclude });
+  }).then(async (saved) => {
+    // Keyed on the order id, so verify, webhook and reconcile cannot each award
+    // the same credits.
+    await creditForOrder(order.id).catch(() => null);
+    await syncTiers(order.userId).catch(() => null);
+    return saved;
   });
 }
 

@@ -235,6 +235,68 @@ const TABLES = {
       if (data.imageUrl) data.imageUrl = canonicalImageUrl(data.imageUrl);
     },
   },
+  rewardTiers: {
+    model: 'rewardTier', label: 'Gift tiers', id: 'id', search: ['name', 'giftLabel'], order: { threshold: 'asc' },
+    fields: {
+      id: { type: 'text', readonly: true, key: true },
+      name: { type: 'text', schema: z.string().min(2) },
+      description: { type: 'textarea', schema: z.string() },
+      threshold: { type: 'money', schema: money.refine((n) => n > 0, 'Enter the purchase total that earns this gift'), hint: 'Qualifying purchases needed, in rupees' },
+      giftLabel: { type: 'text', schema: z.string().min(2), label: 'Gift' },
+      imageUrl: { type: 'text', schema: z.string().nullable(), hint: '/uploads/… or https://…' },
+      sortOrder: { type: 'number', schema: z.number().int() },
+      active: { type: 'bool', schema: z.boolean() },
+      createdAt: { type: 'text', readonly: true },
+    },
+    money: ['threshold'],
+    serialize: (t) => ({ ...t, threshold: Number(t.threshold) / 100 }),
+    beforeWrite: async (data) => {
+      if (data.threshold != null) data.threshold = BigInt(Math.round(data.threshold * 100));
+      if (data.imageUrl) data.imageUrl = canonicalImageUrl(data.imageUrl);
+    },
+    guardDelete: async (id) => {
+      const n = await prisma.rewardClaim.count({ where: { tierId: id } });
+      if (n) throw new ApiError(400, `${n} buyer(s) have already earned this gift. Set active=false instead of deleting.`);
+    },
+  },
+  rewardClaims: {
+    model: 'rewardClaim', label: 'Gift claims', id: 'id', search: ['id'], order: { createdAt: 'desc' },
+    include: { tier: { select: { name: true, giftLabel: true } }, user: { select: { mobile: true, profile: { select: { businessName: true } } } } },
+    fields: {
+      id: { type: 'text', readonly: true, key: true },
+      userId: { type: 'ref', ref: 'users', readonly: true },
+      tierId: { type: 'ref', ref: 'rewardTiers', readonly: true },
+      status: { type: 'enum', options: ['earned', 'claimed', 'delivered'], schema: z.enum(['earned', 'claimed', 'delivered']) },
+      totalAtClaim: { type: 'money', readonly: true },
+      adminNote: { type: 'textarea', schema: z.string().nullable() },
+      createdAt: { type: 'text', readonly: true },
+    },
+    serialize: (c) => ({
+      ...c,
+      totalAtClaim: Number(c.totalAtClaim) / 100,
+      buyer: c.user ? (c.user.profile?.businessName || c.user.mobile) : '',
+      gift: c.tier ? c.tier.giftLabel : '',
+      user: undefined, tier: undefined,
+    }),
+    noCreate: true,
+  },
+  credits: {
+    model: 'creditEntry', label: 'Credit ledger', id: 'id', search: ['note', 'orderId'], order: { createdAt: 'desc' },
+    include: { user: { select: { mobile: true, profile: { select: { businessName: true } } } } },
+    fields: {
+      id: { type: 'text', readonly: true, key: true },
+      userId: { type: 'ref', ref: 'users', readonly: true },
+      delta: { type: 'number', readonly: true },
+      reason: { type: 'text', readonly: true },
+      orderId: { type: 'text', readonly: true },
+      note: { type: 'text', readonly: true },
+      createdAt: { type: 'text', readonly: true },
+    },
+    // The ledger is history: it is read, never rewritten. Corrections are a new
+    // entry through POST /admin/rewards/adjust.
+    serialize: (e) => ({ ...e, id: String(e.id), eventKey: undefined, buyer: e.user ? (e.user.profile?.businessName || e.user.mobile) : '', user: undefined }),
+    noCreate: true, noUpdate: true, listOnly: true,
+  },
   leads: {
     model: 'lead', label: 'Leads / enquiries', id: 'id', search: ['name', 'business', 'mobile', 'email'], order: { createdAt: 'desc' },
     fields: {

@@ -3,6 +3,7 @@
 import { prisma } from '../db/prisma.js';
 import { ApiError } from '../middleware/error.js';
 import { notify } from './notify.js';
+import { reverseOrderCredits } from './rewards.js';
 import { orderInclude } from './orders.js';
 
 const PIPELINE = ['placed', 'packed', 'dispatched', 'outForDelivery', 'delivered'];
@@ -57,6 +58,10 @@ export async function cancelOrder(orderId, note) {
       type: 'orderPlaced', title: 'Order Cancelled',
       body: `Order #${order.id} was cancelled.${note ? ` ${note}` : ''}`, orderId: order.id,
     });
+    return updated;
+  }).then(async (updated) => {
+    // A cancelled order no longer counts, so any credits it earned go back.
+    await reverseOrderCredits(orderId).catch(() => null);
     return updated;
   });
 }

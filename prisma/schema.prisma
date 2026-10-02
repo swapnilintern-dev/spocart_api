@@ -96,6 +96,34 @@ enum QuoteStatus {
   declined
 }
 
+/// Why credits moved. Every entry in the ledger carries one, so a balance can
+/// always be explained line by line.
+enum CreditReason {
+  orderEarned
+  orderReversed
+  dailyCheckIn
+  referral
+  redeemed
+  adminAdjust
+  expired
+}
+
+/// How credits are earned. The business has not settled this yet — the CEO
+/// proposed a daily streak, and purchase-based credits suit a trade buyer who
+/// orders once a week — so both are supported and chosen in the admin panel.
+enum RewardMode {
+  purchase
+  streak
+  both
+}
+
+/// Where a buyer is on a gift tier.
+enum RewardClaimStatus {
+  earned
+  claimed
+  delivered
+}
+
 /// A review is visible only once it is `approved`. Which state a new review
 /// starts in is set by REVIEW_MODERATION.
 enum ReviewStatus {
@@ -145,6 +173,8 @@ model User {
   notifications Notification[]
   devices       DeviceToken[]
   reviews       Review[]
+  credits       CreditEntry[]
+  rewardClaims  RewardClaim[]
 
   @@map("users")
 }
@@ -516,6 +546,99 @@ model Promotion {
 
   @@index([active, startsAt, endsAt])
   @@map("promotions")
+}
+
+/// The single row that holds the reward rules, so changing them is an admin
+/// edit rather than a deploy. Every value starts at zero: nothing is earned or
+/// redeemed until the business sets real numbers.
+model RewardSettings {
+  id                  String     @id @default("default")
+  mode                RewardMode @default(purchase)
+
+  /// Credits earned per ₹100 of qualifying purchases.
+  creditsPer100Rupees Int        @default(0) @map("credits_per_100_rupees")
+
+  /// What one credit is worth at checkout, in paise.
+  creditPaiseValue    Int        @default(0) @map("credit_paise_value")
+
+  /// Credits for opening the app on a new day (streak mode).
+  dailyCheckInCredits Int        @default(0) @map("daily_check_in_credits")
+
+  /// Credits for a referral, once the referred buyer's first order is paid.
+  referralCredits     Int        @default(0) @map("referral_credits")
+
+  /// Most of an order's total that credits may pay for, as a percentage.
+  maxRedeemPercent    Int        @default(0) @map("max_redeem_percent")
+
+  /// Off until the business has decided; the app then hides rewards entirely.
+  active              Boolean    @default(false)
+  updatedAt           DateTime   @updatedAt @map("updated_at")
+
+  @@map("reward_settings")
+}
+
+/// One movement of credits. The balance is the sum of these, never a column
+/// that could drift away from its own history.
+model CreditEntry {
+  id        BigInt       @id @default(autoincrement())
+  userId    String       @map("user_id") @db.Uuid
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  /// Positive earns, negative spends.
+  delta     Int
+  reason    CreditReason
+  orderId   String?      @map("order_id")
+  note      String       @default("")
+
+  /// What this entry was for, exactly once. A repeated award — the same order,
+  /// the same day's check-in — is refused by this unique key rather than by
+  /// hoping the caller only asked once.
+  eventKey  String       @unique @map("event_key")
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@map("credit_entries")
+}
+
+/// A gift the business offers once a buyer's qualifying purchases pass a total.
+model RewardTier {
+  id          String        @id @default(uuid()) @db.Uuid
+  name        String
+  description String        @default("")
+
+  /// Qualifying purchases needed, in paise.
+  threshold   BigInt
+  giftLabel   String        @map("gift_label")
+  imageUrl    String?       @map("image_url")
+  sortOrder   Int           @default(0) @map("sort_order")
+  active      Boolean       @default(true)
+  createdAt   DateTime      @default(now()) @map("created_at")
+  claims      RewardClaim[]
+
+  @@index([threshold])
+  @@map("reward_tiers")
+}
+
+/// A buyer reaching a tier. Unique per buyer per tier, so a gift cannot be
+/// claimed twice however many times the screen is refreshed.
+model RewardClaim {
+  id        String            @id @default(uuid()) @db.Uuid
+  userId    String            @map("user_id") @db.Uuid
+  user      User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tierId    String            @map("tier_id") @db.Uuid
+  tier      RewardTier        @relation(fields: [tierId], references: [id], onDelete: Cascade)
+  status    RewardClaimStatus @default(earned)
+
+  /// Purchases at the moment the tier was reached, in paise, so the record
+  /// stands even if an order is cancelled later.
+  totalAtClaim BigInt         @map("total_at_claim")
+  adminNote String?           @map("admin_note")
+  createdAt DateTime          @default(now()) @map("created_at")
+  updatedAt DateTime          @updatedAt @map("updated_at")
+
+  @@unique([userId, tierId])
+  @@index([status, createdAt])
+  @@map("reward_claims")
 }
 
 model IdCounter {
