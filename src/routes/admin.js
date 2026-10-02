@@ -17,6 +17,8 @@ import { serializeProduct } from './catalog.js';
 import { uuid } from './_schemas.js';
 import adminDb from './adminDb.js';
 import { bestSellerReport, clearBestSellerCache } from '../services/bestSellers.js';
+import { recordPriceChange, entryPrice, notifyPriceDrops } from '../services/deals.js';
+import { canonicalVideoUrl } from '../services/videoUrl.js';
 import multer from 'multer';
 import path from 'node:path';
 import { storeFile, canonicalImageUrl } from '../services/storage.js';
@@ -178,18 +180,34 @@ const productBody = z.object({
 
 async function upsertProduct(data, existingId) {
   data.images = (data.images ?? []).map(canonicalImageUrl);
+  if (data.videoUrl) {
+    const url = canonicalVideoUrl(data.videoUrl);
+    if (!url) throw new ApiError(400, 'That is not a YouTube video link.');
+    data.videoUrl = url;
+  }
   const tiers = data.tiers.map((t) => ({ minQty: t.minQty, unitPrice: toPaise(t.unitPrice) }));
   const problem = validateTiers(tiers, data.moq);
   if (problem) throw new ApiError(400, problem);
   const { tiers: _t, ...fields } = data;
-  return prisma.$transaction(async (tx) => {
+
+  // What the product cost before this write, so a genuine drop can be recorded
+  // and shown on the Deals shelf. Read before the tiers are replaced.
+  const before = existingId
+    ? await prisma.productTier.findMany({ where: { productId: existingId } })
+    : [];
+  const oldEntry = entryPrice(before);
+
+  const saved = await prisma.$transaction(async (tx) => {
     const p = existingId
       ? await tx.product.update({ where: { id: existingId }, data: fields })
       : await tx.product.create({ data: fields });
     await tx.productTier.deleteMany({ where: { productId: p.id } });
     await tx.productTier.createMany({ data: tiers.map((t) => ({ ...t, productId: p.id })) });
+    await recordPriceChange(tx, p.id, oldEntry, entryPrice(tiers));
     return tx.product.findUnique({ where: { id: p.id }, include: { tiers: { orderBy: { minQty: 'asc' } } } });
   });
+  clearBestSellerCache();
+  return saved;
 }
 
 r.post('/products', validate(productBody), asyncHandler(async (req, res) => ok(res, serializeProduct(await upsertProduct(req.body)), 201)));
@@ -211,6 +229,10 @@ r.patch('/products/:id/stock', validate(z.object({ inStock: z.boolean() })), asy
 // ── Best sellers ────────────────────────────────────────────────────────────
 // What actually sold in the last 30 days, and the pin that puts a product on
 // the home rail regardless — a new launch has no sales history to rank on.
+
+r.post('/price-drops/notify', asyncHandler(async (_req, res) => {
+  ok(res, await notifyPriceDrops());
+}));
 
 r.get('/best-sellers', asyncHandler(async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 25, 1), 100);

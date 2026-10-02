@@ -176,3 +176,32 @@ whenever a product is pinned, unpinned or edited through the admin console.
 
 The endpoint returns ids only: the app already holds the catalogue and resolves
 them itself, so the rail costs one small request.
+
+
+## Offers, deals and product video
+
+| Route | Purpose |
+|---|---|
+| `GET /promotions/active` | the one live offer for this buyer (optional auth); null when none |
+| `GET /catalog/deals` | products with a recorded price drop or a tracked low stock |
+| `GET /catalog/new-launches` | newest products, for a range with no sales history yet |
+| `POST /admin/price-drops/notify` | sends the pending drop notifications now instead of waiting for the cron |
+
+Offers live in `promotions` and are edited in the admin console: title, body,
+image, audience (`all` / `registered` / `unregistered`), a start and end time,
+a priority and an on/off switch. Where one leads is checked **on write** — a
+product or category id must exist, and a plain link must be `https`, so a
+buyer's app never has to judge whether a destination is safe.
+
+**Nothing on the Deals shelf is invented.** A product shows a saving only
+because `price_changes` recorded the old and new entry price when an admin
+changed it (through either the product screen or the database console), and a
+price that went *up* is kept as history but never shown as a deal. "Only N left"
+appears only when someone actually set `products.stock_qty`; a product with
+untracked stock says nothing about quantity. Each recorded drop notifies the
+buyers who bought that product before, once — the `notified` flag is what stops
+a second round, and the 5-minute cron sends them.
+
+Product video is an official YouTube link. Any `watch` / `youtu.be` / `embed` /
+`shorts` / `m.youtube` form is accepted on write, stored canonically, and served
+with its thumbnail; anything else is refused.

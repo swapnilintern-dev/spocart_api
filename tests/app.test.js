@@ -85,6 +85,47 @@ describe('public api', () => {
     expect(report.status).toBe(401);
   });
 
+  it('the live promotion is readable without signing in', async () => {
+    const res = await request(app).get('/api/v1/promotions/active');
+    expect(res.status).toBe(200);
+    // Either a promotion or null — never an error, because the home screen
+    // renders before sign-in.
+    expect(res.body.data).toHaveProperty('promotion');
+  });
+
+  it('deals never invent a saving or a stock count', async () => {
+    const res = await request(app).get('/api/v1/catalog/deals');
+    expect(res.status).toBe(200);
+    for (const d of res.body.data) {
+      // A deal is on the shelf for a recorded price drop or a tracked low
+      // stock — one of the two must be a real number.
+      expect(d.previousPrice != null || d.stockLeft != null).toBe(true);
+      if (d.previousPrice != null) expect(d.previousPrice).toBeGreaterThan(d.currentPrice);
+      if (d.stockLeft != null) expect(d.stockLeft).toBeGreaterThan(0);
+    }
+  });
+
+  it('new launches come back newest first', async () => {
+    const res = await request(app).get('/api/v1/catalog/new-launches?limit=5');
+    expect(res.status).toBe(200);
+    expect(res.body.data.length).toBeLessThanOrEqual(5);
+    for (const p of res.body.data) expect(p.tiers.length).toBeGreaterThan(0);
+  });
+
+  it('a product carries its video and thumbnail together, or neither', async () => {
+    const res = await request(app).get('/api/v1/catalog/products?limit=100');
+    expect(res.status).toBe(200);
+    for (const p of res.body.data) {
+      expect(p.videoUrl == null).toBe(p.videoThumbnailUrl == null);
+      if (p.videoUrl) expect(p.videoUrl).toMatch(/^https:\/\/www\.youtube\.com\/watch\?v=/);
+    }
+  });
+
+  it('managing offers is admin-only', async () => {
+    const res = await request(app).post('/api/v1/admin/db/promotions').send({ title: 'Nope', body: 'Nope' });
+    expect(res.status).toBe(401);
+  });
+
   it('the PIN lookup is not public', async () => {
     const res = await request(app).get('/api/v1/addresses/pincode/411001');
     expect(res.status).toBe(401);

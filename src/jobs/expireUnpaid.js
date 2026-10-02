@@ -5,6 +5,7 @@ import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { minutesAgo } from '../utils/dates.js';
 import { reconcilePending } from '../services/reconcile.js';
+import { notifyPriceDrops } from '../services/deals.js';
 
 export function startExpireUnpaidJob() {
   cron.schedule('*/5 * * * *', async () => {
@@ -23,5 +24,12 @@ export function startExpireUnpaidJob() {
       });
     }
     if (stale.length) console.log(`expireUnpaid: cancelled ${stale.length} unpaid order(s)`);
+
+    // Tell previous buyers about genuine price drops. Each recorded change is
+    // used once, so a drop can never produce two rounds of notifications.
+    const drops = await notifyPriceDrops().catch(() => ({ changes: 0, notifications: 0 }));
+    if (drops.notifications) {
+      console.log(`priceDrops: ${drops.notifications} notification(s) from ${drops.changes} change(s)`);
+    }
   });
 }

@@ -10,6 +10,9 @@ import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
 import { validateTiers } from '../services/pricing.js';
 import { clearBestSellerCache } from '../services/bestSellers.js';
+import { recordPriceChange, entryPrice } from '../services/deals.js';
+import { validateLink } from '../services/promotions.js';
+import { canonicalVideoUrl } from '../services/videoUrl.js';
 import { mobile, gstin, pincode, email, businessType } from './_schemas.js';
 import { canonicalImageUrl } from '../services/storage.js';
 
@@ -55,11 +58,18 @@ const TABLES = {
       customisable: { type: 'bool', schema: z.boolean() },
       active: { type: 'bool', schema: z.boolean() },
       featuredRank: { type: 'number', schema: z.number().int().min(1).max(999).nullable(), hint: 'Pins the product to the top of Best Sellers; empty = not pinned' },
+      videoUrl: { type: 'text', schema: z.string().nullable(), hint: 'Official YouTube link; any watch / youtu.be / shorts form is accepted' },
+      stockQty: { type: 'number', schema: z.number().int().min(0).nullable(), hint: 'Units on hand. Leave empty to not track stock — the app then says nothing about how many are left' },
       tiers: { type: 'tiers', schema: z.array(z.object({ minQty: z.number().int().positive(), unitPrice: money })).min(1), virtual: true },
     },
     serialize: (p) => ({ ...p, rating: Number(p.rating), tiers: (p.tiers || []).map((t) => ({ minQty: t.minQty, unitPrice: Number(t.unitPrice) / 100 })) }),
     beforeWrite: async (data, existing) => {
       if (data.images) data.images = data.images.map(canonicalImageUrl);
+      if (data.videoUrl) {
+        const url = canonicalVideoUrl(data.videoUrl);
+        if (!url) throw new ApiError(400, 'That is not a YouTube video link.');
+        data.videoUrl = url;
+      }
       if (data.tiers) {
         const tiers = data.tiers.map((t) => ({ minQty: t.minQty, unitPrice: BigInt(Math.round(t.unitPrice * 100)) }));
         const problem = validateTiers(tiers, data.moq ?? existing?.moq ?? 1);
@@ -68,7 +78,14 @@ const TABLES = {
       }
     },
     afterWrite: async (tx, row, data) => {
-      if (data.__tiers) { await tx.productTier.deleteMany({ where: { productId: row.id } }); await tx.productTier.createMany({ data: data.__tiers.map((t) => ({ ...t, productId: row.id })) }); }
+      if (data.__tiers) {
+        const before = await tx.productTier.findMany({ where: { productId: row.id } });
+        await tx.productTier.deleteMany({ where: { productId: row.id } });
+        await tx.productTier.createMany({ data: data.__tiers.map((t) => ({ ...t, productId: row.id })) });
+        // A price edited here lands on the Deals shelf exactly like one edited
+        // through the product screen.
+        await recordPriceChange(tx, row.id, entryPrice(before), entryPrice(data.__tiers));
+      }
       clearBestSellerCache();   // active / pin changes must show up straight away
     },
     guardDelete: async (id) => { const n = await prisma.orderItem.count({ where: { productId: id } }); if (n) throw new ApiError(400, `${n} order line(s) reference this product. Set active=false instead of deleting.`); },
@@ -184,6 +201,38 @@ const TABLES = {
     serialize: (q) => ({ ...q, quotedTotal: q.quotedTotal == null ? null : Number(q.quotedTotal) / 100, items: (q.items || []).map((i) => ({ ...i, id: String(i.id) })) }),
     beforeWrite: async (data) => { if (data.quotedTotal != null) data.quotedTotal = BigInt(Math.round(data.quotedTotal * 100)); },
     noCreate: true,
+  },
+  promotions: {
+    model: 'promotion', label: 'Offers & announcements', id: 'id', search: ['title', 'body'], order: { createdAt: 'desc' },
+    fields: {
+      id: { type: 'text', readonly: true, key: true },
+      title: { type: 'text', schema: z.string().min(2) },
+      body: { type: 'textarea', schema: z.string().min(2) },
+      imageUrl: { type: 'text', schema: z.string().nullable(), hint: '/uploads/… or https://…' },
+      linkType: { type: 'enum', options: ['none', 'product', 'category', 'url'], schema: z.enum(['none', 'product', 'category', 'url']) },
+      linkTarget: { type: 'text', schema: z.string().nullable(), hint: 'Product id, category id, or a full https link' },
+      audience: { type: 'enum', options: ['all', 'registered', 'unregistered'], schema: z.enum(['all', 'registered', 'unregistered']) },
+      startsAt: { type: 'date', schema: dateish },
+      endsAt: { type: 'date', schema: dateish },
+      priority: { type: 'number', schema: z.number().int(), hint: 'Higher wins when more than one is live' },
+      active: { type: 'bool', schema: z.boolean() },
+      createdAt: { type: 'text', readonly: true },
+    },
+    beforeWrite: async (data, existing) => {
+      for (const k of ['startsAt', 'endsAt']) if (data[k]) data[k] = new Date(data[k]);
+      const starts = data.startsAt ?? existing?.startsAt;
+      const ends = data.endsAt ?? existing?.endsAt;
+      if (starts && ends && ends <= starts) throw new ApiError(400, 'The end time must be after the start time.');
+      // Checked here so a buyer's app never has to judge whether a link is safe.
+      const linkType = data.linkType ?? existing?.linkType ?? 'none';
+      if (data.linkType !== undefined || data.linkTarget !== undefined) {
+        const target = data.linkTarget ?? existing?.linkTarget;
+        data.linkTarget = await validateLink(linkType, target).catch((e) => {
+          throw new ApiError(e.status ?? 400, e.message);
+        });
+      }
+      if (data.imageUrl) data.imageUrl = canonicalImageUrl(data.imageUrl);
+    },
   },
   leads: {
     model: 'lead', label: 'Leads / enquiries', id: 'id', search: ['name', 'business', 'mobile', 'email'], order: { createdAt: 'desc' },
