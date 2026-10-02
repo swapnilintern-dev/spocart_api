@@ -34,6 +34,7 @@ export const serializeProduct = (p) => ({
   popular: p.popular,
   customisable: p.customisable,
   pinned: p.featuredRank != null,
+  barcode: p.barcode ?? null,
   videoUrl: p.videoUrl ?? null,
   videoThumbnailUrl: videoThumbnailUrl(p.videoUrl),
   // Only sent when an admin actually tracks this product's stock, and only
@@ -95,6 +96,24 @@ r.get('/products/:id/reviews', optionalAuth, asyncHandler(async (req, res) => {
   const limit = Math.min(Math.max(Number(req.query.limit) || 10, 1), 50);
   const offset = Math.max(Number(req.query.offset) || 0, 0);
   ok(res, await reviewsFor(req.params.id, { offset, limit, userId: req.user?.id }));
+}));
+
+/**
+ * Resolves a scanned barcode to a product. Public, because scanning happens on
+ * the search bar before a buyer needs an account. A code nobody has entered yet
+ * answers 404 — the app then says so instead of guessing at a product.
+ */
+r.get('/barcode/:code', asyncHandler(async (req, res) => {
+  const code = String(req.params.code ?? '').trim();
+  if (!/^[A-Za-z0-9._-]{4,64}$/.test(code)) {
+    throw new ApiError(400, 'That does not look like a product barcode.');
+  }
+  const product = await prisma.product.findFirst({
+    where: { barcode: code, active: true },
+    include: tiersInclude,
+  });
+  if (!product) throw new ApiError(404, 'No SPOCART product carries that barcode.');
+  ok(res, serializeProduct(product));
 }));
 
 r.get('/categories', cache, asyncHandler(async (_req, res) => {

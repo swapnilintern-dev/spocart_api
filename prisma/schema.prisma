@@ -273,6 +273,11 @@ model Product {
   /// Official product video (YouTube). Validated on write; null means none.
   videoUrl     String?       @map("video_url")
 
+  /// The barcode printed on the box (EAN-13, UPC-A or the seller's own code),
+  /// so a buyer can scan a carton instead of searching. Null until someone
+  /// enters it: scanning an unknown code says so rather than guessing.
+  barcode      String?       @unique
+
   /// Units on hand. Null means stock is not tracked for this product — the app
   /// then says nothing about how many are left rather than inventing scarcity.
   stockQty     Int?          @map("stock_qty")

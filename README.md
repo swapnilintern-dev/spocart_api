@@ -233,3 +233,14 @@ reviews reads 0 rather than keeping a stale average.
 verified buyer's review immediately and lets an admin hide it; `manual` holds
 every review for approval. Reviewer names show the business name, or a masked
 mobile number — never the full number.
+
+
+## Barcode lookup (`GET /api/v1/catalog/barcode/:code`)
+
+Public, so a buyer can scan before signing in. `products.barcode` is unique and
+nullable: a code nobody has entered yet answers 404 and the app says so rather
+than guessing at a product. Admins enter the code on the product screen or in
+the database console, which also searches by it.
+
+**No product carries a barcode yet** — scanning will keep reporting "no SPOCART
+product carries that barcode" until real codes are entered.

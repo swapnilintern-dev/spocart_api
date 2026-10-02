@@ -59,6 +59,7 @@ const TABLES = {
       active: { type: 'bool', schema: z.boolean() },
       featuredRank: { type: 'number', schema: z.number().int().min(1).max(999).nullable(), hint: 'Pins the product to the top of Best Sellers; empty = not pinned' },
       videoUrl: { type: 'text', schema: z.string().nullable(), hint: 'Official YouTube link; any watch / youtu.be / shorts form is accepted' },
+      barcode: { type: 'text', schema: z.string().trim().min(4).max(64).nullable(), hint: 'The code printed on the box (EAN-13 / UPC-A). Leave empty if your stock is not barcoded' },
       stockQty: { type: 'number', schema: z.number().int().min(0).nullable(), hint: 'Units on hand. Leave empty to not track stock — the app then says nothing about how many are left' },
       tiers: { type: 'tiers', schema: z.array(z.object({ minQty: z.number().int().positive(), unitPrice: money })).min(1), virtual: true },
     },

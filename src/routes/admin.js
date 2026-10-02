@@ -176,6 +176,7 @@ const productBody = z.object({
   popular: z.boolean().default(false),
   customisable: z.boolean().default(false),
   active: z.boolean().default(true),
+  barcode: z.string().trim().min(4).max(64).nullable().optional(),
   tiers: z.array(z.object({ minQty: z.number().int().positive(), unitPrice: z.number().positive() })).min(1),
 });
 
