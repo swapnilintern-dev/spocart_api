@@ -43,13 +43,12 @@ export async function issueOtp(mobile, purpose = 'login') {
   });
   await sendSms(mobile, { otp: code });
 
-  // Development convenience: with the console driver the code is already
-  // printed in plain text in this server's log, so also handing it back lets
-  // the app show it on screen instead of making the developer read the log.
-  // Both guards must hold — a production deployment never returns a code, even
-  // if it is somehow still on the console driver.
-  const devCode = !isProd && env.SMS_DRIVER === 'console' ? code : undefined;
-  return { mobile, expiresAt, ...(devCode && { devCode }) };
+  // The code goes back to the app so it can be shown on screen, instead of an
+  // SMS nobody can send yet. Only on the console driver — a real gateway is
+  // never echoed — and in production only when DEV_OTP_ECHO was deliberately
+  // switched on, which server.js warns about on every boot.
+  const echo = env.SMS_DRIVER === 'console' && (!isProd || env.DEV_OTP_ECHO);
+  return { mobile, expiresAt, ...(echo && { devCode: code }) };
 }
 
 export const sendOtp = (mobile) => issueOtp(mobile, 'login');

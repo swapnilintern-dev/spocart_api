@@ -59,6 +59,29 @@ describe('public api', () => {
     expect(verified.body.data.token).toBeTruthy();
   });
 
+  // The echo exists so the app can be tested before DLT approval. Two things
+  // must hold: a real gateway is never echoed, and in production it needs the
+  // switch. The production half is checked by hand (the environment is read
+  // once at import) — a NODE_ENV=production server returns no code by default,
+  // returns one with DEV_OTP_ECHO=true, and returns none again on a real driver.
+  it('the echoed code is the one that actually signs you in', async () => {
+    const sent = await request(app)
+      .post('/api/v1/auth/otp/send')
+      .send({ mobile: '9876500022' });
+    expect(sent.body.data.devCode).toMatch(/^\d{6}$/);
+
+    const wrong = await request(app)
+      .post('/api/v1/auth/otp/verify')
+      .send({ mobile: '9876500022', code: '000000' });
+    expect(wrong.status).toBe(400);
+
+    const right = await request(app)
+      .post('/api/v1/auth/otp/verify')
+      .send({ mobile: '9876500022', code: sent.body.data.devCode });
+    expect(right.status).toBe(200);
+    expect(right.body.data.user.mobile).toBe('9876500022');
+  });
+
   it('sign-in methods are advertised', async () => {
     const res = await request(app).get('/api/v1/auth/methods');
     expect(res.status).toBe(200);

@@ -1,5 +1,5 @@
 import app from './app.js';
-import { env } from './config/env.js';
+import { env, isProd } from './config/env.js';
 import { prisma } from './db/prisma.js';
 import { startExpireUnpaidJob } from './jobs/expireUnpaid.js';
 
@@ -9,6 +9,18 @@ BigInt.prototype.toJSON = function toJSON() { return Number(this); };
 
 await prisma.$connect();
 startExpireUnpaidJob();
+
+// Loud and every single boot: with this on, anyone who knows a mobile number
+// can sign in as it, because the code comes back in the response instead of an
+// SMS. It exists so the app can be tested before DLT approval, and it has to go
+// off the day real SMS is live.
+if (isProd && env.DEV_OTP_ECHO) {
+  console.warn(
+    '\n*** DEV_OTP_ECHO is ON in production. OTPs are returned to the caller ' +
+    'and anyone who knows a mobile number can sign in as it. ' +
+    'Turn this off as soon as SMS delivery works. ***\n',
+  );
+}
 
 const server = app.listen(env.PORT, '0.0.0.0', () => {
   console.log(`SPOCART API listening on http://0.0.0.0:${env.PORT} (${env.NODE_ENV})`);

@@ -341,3 +341,23 @@ Two rules make it safe to switch on:
 
 Limited to 10 searches a minute per caller, capped at 8 suggestions per answer
 and 300 products of context. `AI_SEARCH_MODEL` defaults to `claude-sonnet-5-5`.
+
+
+## Signing in before DLT approval (`DEV_OTP_ECHO`)
+
+Until the DLT template is approved there is no way to deliver an SMS, so the OTP
+comes back in the response and the app shows it on its own screen. This happens
+only with `SMS_DRIVER=console`, and **in production only when `DEV_OTP_ECHO` is
+explicitly set true** — the server then prints a warning on every boot.
+
+```
+*** DEV_OTP_ECHO is ON in production. OTPs are returned to the caller and
+anyone who knows a mobile number can sign in as it. Turn this off as soon as
+SMS delivery works. ***
+```
+
+That warning is the whole point: while this is on, **anyone who knows a mobile
+number can sign in as that buyer.** It is for testing the app end to end before
+SMS works, and it must be turned off the day `SMS_DRIVER` becomes `2factor` or
+`msg91`. Switching the driver alone is enough — a real gateway is never echoed,
+whatever this flag says.

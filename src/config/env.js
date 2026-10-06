@@ -25,6 +25,11 @@ const schema = z.object({
   // 'auto' publishes a verified buyer's review straight away and lets an admin
   // hide it; 'manual' holds every review until an admin approves it.
   REVIEW_MODERATION: z.enum(['auto', 'manual']).default('auto'),
+  // Shows the OTP on the app's own screen instead of sending an SMS, so the
+  // whole app can be tested before DLT approval comes through. Anyone who knows
+  // a mobile number can sign in as it while this is on, so it must be turned
+  // off the moment real SMS is live. The server says so loudly at startup.
+  DEV_OTP_ECHO: z.coerce.boolean().default(false),
   // AI-assisted search. Off unless the business has approved the per-search
   // cost AND a key is set; the ordinary typo-tolerant search answers otherwise.
   AI_SEARCH_ENABLED: z.coerce.boolean().default(false),
