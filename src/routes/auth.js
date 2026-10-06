@@ -8,11 +8,23 @@ import { ok } from '../utils/respond.js';
 import * as auth from '../services/auth.js';
 import { mobileFromIdToken, firebaseEnabled } from '../services/firebase.js';
 import { mobile, gstin, email, businessType } from './_schemas.js';
+import { env, isProd } from '../config/env.js';
 
 const r = Router();
 
-/** Lets the app and website pick the sign-in method the server actually supports. */
-r.get('/methods', (_req, res) => ok(res, { firebase: firebaseEnabled(), otp: true }));
+/**
+ * What the clients need to know about signing in, and nothing secret: which
+ * methods work, how an OTP is delivered, and whether the code comes back on
+ * screen instead of by SMS. The app uses the last one to say "the code is
+ * below" rather than "check your messages", and it is the quickest way to see
+ * how a deployed server is actually configured.
+ */
+r.get('/methods', (_req, res) => ok(res, {
+  firebase: firebaseEnabled(),
+  otp: true,
+  smsDriver: env.SMS_DRIVER,
+  otpOnScreen: env.SMS_DRIVER === 'console' && (!isProd || env.DEV_OTP_ECHO),
+}));
 
 r.post('/otp/send', otpLimiter, validate(z.object({ mobile })), asyncHandler(async (req, res) => {
   ok(res, await auth.sendOtp(req.body.mobile));

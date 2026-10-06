@@ -94,11 +94,17 @@ describe('public api', () => {
     }
   });
 
-  it('sign-in methods are advertised', async () => {
+  it('sign-in methods are advertised, without leaking a key', async () => {
     const res = await request(app).get('/api/v1/auth/methods');
     expect(res.status).toBe(200);
     expect(res.body.data.otp).toBe(true);
     expect(typeof res.body.data.firebase).toBe('boolean');
+    // Tells the clients how a code arrives, so the app can say "the code is
+    // below" instead of "check your messages".
+    expect(['console', '2factor', 'msg91']).toContain(res.body.data.smsDriver);
+    expect(typeof res.body.data.otpOnScreen).toBe('boolean');
+    // Nothing secret may ride along.
+    expect(JSON.stringify(res.body)).not.toMatch(/KEY|SECRET|TOKEN|AUTH/i);
   });
 
   it('best sellers are public and ranked ids only', async () => {
