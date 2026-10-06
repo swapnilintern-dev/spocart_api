@@ -9,6 +9,8 @@ import {
 
 let userId;
 let tierId;
+/// Whatever the shop had configured before these tests ran.
+let savedSettings;
 
 const rules = (over = {}) => prisma.rewardSettings.update({
   where: { id: 'default' },
@@ -19,6 +21,7 @@ const rules = (over = {}) => prisma.rewardSettings.update({
 });
 
 beforeAll(async () => {
+  savedSettings = await prisma.rewardSettings.findUnique({ where: { id: 'default' } });
   const user = await prisma.user.create({ data: { mobile: '9000000001' } });
   userId = user.id;
   const tier = await prisma.rewardTier.create({
@@ -32,13 +35,11 @@ afterAll(async () => {
   await prisma.rewardClaim.deleteMany({ where: { userId } });
   await prisma.rewardTier.delete({ where: { id: tierId } }).catch(() => null);
   await prisma.user.delete({ where: { id: userId } }).catch(() => null);
-  await prisma.rewardSettings.update({
-    where: { id: 'default' },
-    data: {
-      mode: 'purchase', creditsPer100Rupees: 0, creditPaiseValue: 0,
-      dailyCheckInCredits: 0, referralCredits: 0, maxRedeemPercent: 0, active: false,
-    },
-  });
+  // Restore what the shop had, rather than switching its programme off.
+  if (savedSettings) {
+    const { id, updatedAt, ...fields } = savedSettings;
+    await prisma.rewardSettings.update({ where: { id: 'default' }, data: fields });
+  }
 });
 
 beforeEach(async () => {

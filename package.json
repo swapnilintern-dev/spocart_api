@@ -10,6 +10,8 @@
     "migrate": "prisma migrate dev",
     "deploy": "prisma migrate deploy",
     "seed": "prisma db seed",
+    "seed:samples": "node prisma/seed-samples.js",
+    "seed:samples:neon": "DATABASE_URL=\"$(grep '^DATABASE_URL=' .env.production | cut -d= -f2- | tr -d '\"')\" node prisma/seed-samples.js",
     "studio": "prisma studio",
     "generate": "prisma generate",
     "dev:neon": "DATABASE_URL=\"$(grep '^DATABASE_URL=' .env.production | cut -d= -f2- | tr -d '\"')\" nodemon src/server.js",

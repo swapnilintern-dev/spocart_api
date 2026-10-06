@@ -361,3 +361,32 @@ number can sign in as that buyer.** It is for testing the app end to end before
 SMS works, and it must be turned off the day `SMS_DRIVER` becomes `2factor` or
 `msg91`. Switching the driver alone is enough — a real gateway is never echoed,
 whatever this flag says.
+
+
+## Sample data (`npm run seed:samples`)
+
+Fills the empty parts of the catalogue so every feature can be seen working
+before the real data arrives. Safe to run more than once — each step checks what
+is already there.
+
+```bash
+npm run seed:samples                  # say what it would do
+npm run seed:samples -- --apply       # do it
+npm run seed:samples -- --apply --remove   # take the samples back out
+npm run seed:samples:neon -- --apply  # the same, against the Neon database
+```
+
+It sets a catalogue photo on every product that lacks one, a valid EAN-13
+barcode on each (generated from the id — **not** the code on your cartons), a
+stock count on four products with two low enough to show "Only N left", a
+placeholder video on one product, two genuine price drops so the Deals shelf has
+something real, one live offer, three gift tiers with the rewards programme
+switched on, and two reviews written by the buyer of a delivered order.
+
+It also clears the **made-up ratings** the original seed shipped with: 34
+products showed "4.5 ★ (124 reviews)" with no reviews behind them. After this a
+product's stars always come from real reviews, and a product with none says
+"No reviews yet".
+
+Everything it writes is a stand-in meant to be replaced — above all the
+barcodes and the video link.
