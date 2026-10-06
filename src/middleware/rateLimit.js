@@ -26,5 +26,14 @@ export const otpMobileLimiter = rateLimit({
 /// Applied together wherever an OTP is sent or checked.
 export const otpLimiter = [otpIpLimiter, otpMobileLimiter];
 
+/// AI search costs money per call, so it is limited more tightly than the rest.
+export const aiAssistLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Too many searches. Please wait a moment.' },
+});
+
 export const publicFormLimiter = rateLimit({ windowMs: 60 * 60_000, limit: 20, standardHeaders: true, legacyHeaders: false, message });
 export const apiLimiter = rateLimit({ windowMs: 60_000, limit: 300, standardHeaders: true, legacyHeaders: false, message });

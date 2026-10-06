@@ -9,6 +9,10 @@ import { deals, entryPrice, LOW_STOCK_THRESHOLD } from '../services/deals.js';
 import { videoThumbnailUrl } from '../services/videoUrl.js';
 import { reviewsFor } from '../services/reviews.js';
 import { optionalAuth } from '../middleware/auth.js';
+import { z } from 'zod';
+import { validate } from '../middleware/validate.js';
+import { aiAssistLimiter } from '../middleware/rateLimit.js';
+import { assist, aiSearchStatus } from '../services/aiSearch.js';
 
 const r = Router();
 const cache = (_req, res, next) => { res.set('Cache-Control', 'public, max-age=300'); next(); };
@@ -115,6 +119,45 @@ r.get('/barcode/:code', asyncHandler(async (req, res) => {
   if (!product) throw new ApiError(404, 'No SPOCART product carries that barcode.');
   ok(res, serializeProduct(product));
 }));
+
+/**
+ * Plain-language product help: "kit for 50 kids under 12". Answers from the
+ * model when the business has switched that on, and from the ordinary
+ * typo-tolerant search otherwise — the response says which, and a buyer always
+ * gets products either way.
+ */
+r.post('/assist', optionalAuth, aiAssistLimiter, validate(z.object({
+  query: z.string().trim().min(2, 'Tell us what you need').max(300),
+})), asyncHandler(async (req, res) => {
+  ok(res, await assist(req.body.query, { fallback: fallbackSearch }));
+}));
+
+r.get('/assist/status', asyncHandler(async (_req, res) => {
+  ok(res, aiSearchStatus());
+}));
+
+/**
+ * The plain search the assistant falls back to: whole-word and prefix matches
+ * over the catalogue, newest first, ids only.
+ */
+async function fallbackSearch(query) {
+  const words = query.toLowerCase().split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+  if (words.length === 0) return [];
+  const rows = await prisma.product.findMany({
+    where: {
+      active: true,
+      OR: words.flatMap((w) => [
+        { name: { contains: w, mode: 'insensitive' } },
+        { brand: { contains: w, mode: 'insensitive' } },
+        { subcategory: { contains: w, mode: 'insensitive' } },
+        { categoryId: { contains: w, mode: 'insensitive' } },
+      ]),
+    },
+    select: { id: true },
+    take: 8,
+  });
+  return rows.map((p) => p.id);
+}
 
 r.get('/categories', cache, asyncHandler(async (_req, res) => {
   const rows = await prisma.category.findMany({ where: { active: true }, orderBy: { sortOrder: 'asc' } });

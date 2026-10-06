@@ -25,6 +25,11 @@ const schema = z.object({
   // 'auto' publishes a verified buyer's review straight away and lets an admin
   // hide it; 'manual' holds every review until an admin approves it.
   REVIEW_MODERATION: z.enum(['auto', 'manual']).default('auto'),
+  // AI-assisted search. Off unless the business has approved the per-search
+  // cost AND a key is set; the ordinary typo-tolerant search answers otherwise.
+  AI_SEARCH_ENABLED: z.coerce.boolean().default(false),
+  ANTHROPIC_API_KEY: z.string().optional(),
+  AI_SEARCH_MODEL: z.string().default('claude-sonnet-5-5'),
   // File storage. All three must be set to use Cloudinary; otherwise uploads
   // fall back to local disk (fine for development, wiped on every Render deploy).
   CLOUDINARY_CLOUD_NAME: z.string().optional(),

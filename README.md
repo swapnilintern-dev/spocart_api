@@ -312,3 +312,32 @@ numbers under four known keys (`results`, `queryLength`, `quantity`,
 never the query. An unrecognised event name is dropped rather than stored, so a
 later app version cannot write junk into the table. `deviceId` identifies an
 install so an anonymous visitor is counted once — it is not a person.
+
+
+## AI-assisted search (`POST /api/v1/catalog/assist`)
+
+A buyer describes what they need — "kit for 50 kids under 12" — and gets
+products from our own catalogue.
+
+**Off by default.** It runs only when `AI_SEARCH_ENABLED` is true **and**
+`ANTHROPIC_API_KEY` is set, so no paid call can happen before the business has
+approved the per-search cost. `GET /catalog/assist/status` says whether it is on
+and, if not, which of the two is missing.
+
+When it is off — or the model fails, times out after 12 s, or answers with
+something that is not JSON — the ordinary search answers instead. The response
+carries `source: 'ai' | 'search'`, so a buyer always gets products and the app
+can say where they came from.
+
+Two rules make it safe to switch on:
+
+1. **Grounded.** The model is given the catalogue and may only answer with ids
+   from it. Any id it invents is dropped before anything is returned, so a
+   product that does not exist cannot reach a buyer.
+2. **It never speaks about money or stock.** The catalogue sent to the model
+   carries no prices at all; prices, MOQ and availability are attached from the
+   database afterwards. A wrong number cannot be quoted even if the model
+   claims one.
+
+Limited to 10 searches a minute per caller, capped at 8 suggestions per answer
+and 300 products of context. `AI_SEARCH_MODEL` defaults to `claude-sonnet-5-5`.
