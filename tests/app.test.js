@@ -82,6 +82,18 @@ describe('public api', () => {
     expect(right.body.data.user.mobile).toBe('9876500022');
   });
 
+  it('an on/off flag only counts the words that mean on', async () => {
+    // z.coerce.boolean() would read "false" as true, which for DEV_OTP_ECHO
+    // means handing out OTPs and for AI_SEARCH_ENABLED means paying per search.
+    const { boolish } = await import('../src/config/env.js');
+    for (const on of ['true', 'TRUE', ' on ', '1', 'yes', true]) {
+      expect(boolish(false).parse(on), String(on)).toBe(true);
+    }
+    for (const off of ['false', '0', 'no', 'off', '', undefined, false]) {
+      expect(boolish(false).parse(off), String(off)).toBe(false);
+    }
+  });
+
   it('sign-in methods are advertised', async () => {
     const res = await request(app).get('/api/v1/auth/methods');
     expect(res.status).toBe(200);

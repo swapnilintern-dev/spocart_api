@@ -3,6 +3,25 @@
 import 'dotenv/config';
 import { z } from 'zod';
 
+/**
+ * An on/off setting from the environment.
+ *
+ * `z.coerce.boolean()` is a trap here: it is `Boolean(string)`, so "false",
+ * "0" and "no" all come out **true**. Someone turning a flag off by setting it
+ * to false would switch it on — which for DEV_OTP_ECHO means handing out OTPs,
+ * and for AI_SEARCH_ENABLED means paying per search. Only the words below mean
+ * on; everything else, including nothing at all, means off.
+ */
+export const boolish = (fallback = false) =>
+  z
+    .union([z.boolean(), z.string()])
+    .optional()
+    .transform((v) => {
+      if (v === undefined || v === '') return fallback;
+      if (typeof v === 'boolean') return v;
+      return ['true', '1', 'yes', 'on'].includes(v.trim().toLowerCase());
+    });
+
 const schema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().default(3000),
@@ -15,7 +34,7 @@ const schema = z.object({
   SMS_DRIVER: z.enum(['console', '2factor', 'msg91']).default('console'),
   TWOFACTOR_API_KEY: z.string().optional(),
   TWOFACTOR_TEMPLATE_NAME: z.string().optional(),
-  TWOFACTOR_VOICE_FALLBACK: z.coerce.boolean().default(false),
+  TWOFACTOR_VOICE_FALLBACK: boolish(false),
   MSG91_AUTH_KEY: z.string().optional(),
   MSG91_TEMPLATE_ID: z.string().optional(),
   PUBLIC_BASE_URL: z.string().default('http://localhost:3000'),
@@ -29,10 +48,10 @@ const schema = z.object({
   // whole app can be tested before DLT approval comes through. Anyone who knows
   // a mobile number can sign in as it while this is on, so it must be turned
   // off the moment real SMS is live. The server says so loudly at startup.
-  DEV_OTP_ECHO: z.coerce.boolean().default(false),
+  DEV_OTP_ECHO: boolish(false),
   // AI-assisted search. Off unless the business has approved the per-search
   // cost AND a key is set; the ordinary typo-tolerant search answers otherwise.
-  AI_SEARCH_ENABLED: z.coerce.boolean().default(false),
+  AI_SEARCH_ENABLED: boolish(false),
   ANTHROPIC_API_KEY: z.string().optional(),
   AI_SEARCH_MODEL: z.string().default('claude-sonnet-5-5'),
   // File storage. All three must be set to use Cloudinary; otherwise uploads
