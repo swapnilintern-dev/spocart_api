@@ -44,10 +44,13 @@ export async function issueOtp(mobile, purpose = 'login') {
   await sendSms(mobile, { otp: code });
 
   // The code goes back to the app so it can be shown on screen, instead of an
-  // SMS nobody can send yet. Only on the console driver — a real gateway is
-  // never echoed — and in production only when DEV_OTP_ECHO was deliberately
-  // switched on, which server.js warns about on every boot.
-  const echo = env.SMS_DRIVER === 'console' && (!isProd || env.DEV_OTP_ECHO);
+  // SMS the buyer may never receive.
+  //
+  // DEV_OTP_ECHO is deliberate and wins wherever it is set, including over a
+  // real SMS gateway: the shop asked to be able to sign in while delivery is
+  // still being sorted out. Without it, only a development server on the
+  // console driver echoes. server.js warns about this on every boot.
+  const echo = env.DEV_OTP_ECHO || (!isProd && env.SMS_DRIVER === 'console');
   return { mobile, expiresAt, ...(echo && { devCode: code }) };
 }
 

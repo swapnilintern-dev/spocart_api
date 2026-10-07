@@ -14,12 +14,20 @@ startExpireUnpaidJob();
 // can sign in as it, because the code comes back in the response instead of an
 // SMS. It exists so the app can be tested before DLT approval, and it has to go
 // off the day real SMS is live.
-if (isProd && env.DEV_OTP_ECHO) {
+if (env.DEV_OTP_ECHO) {
   console.warn(
-    '\n*** DEV_OTP_ECHO is ON in production. OTPs are returned to the caller ' +
-    'and anyone who knows a mobile number can sign in as it. ' +
-    'Turn this off as soon as SMS delivery works. ***\n',
+    `\n*** DEV_OTP_ECHO is ON${isProd ? ' in production' : ''}. OTPs are returned ` +
+    'to the caller, so anyone who knows a mobile number can sign in as it. ' +
+    'Turn this off as soon as SMS delivery works. ***',
   );
+  if (env.SMS_DRIVER !== 'console') {
+    console.warn(
+      `*** SMS_DRIVER is "${env.SMS_DRIVER}", so every code is ALSO sent as a real ` +
+      'SMS and charged. Set SMS_DRIVER=console while testing. ***\n',
+    );
+  } else {
+    console.warn('');
+  }
 }
 
 const server = app.listen(env.PORT, '0.0.0.0', () => {

@@ -357,10 +357,15 @@ SMS delivery works. ***
 ```
 
 That warning is the whole point: while this is on, **anyone who knows a mobile
-number can sign in as that buyer.** It is for testing the app end to end before
-SMS works, and it must be turned off the day `SMS_DRIVER` becomes `2factor` or
-`msg91`. Switching the driver alone is enough — a real gateway is never echoed,
-whatever this flag says.
+number can sign in as that buyer.** It is for testing the app end to end while
+SMS delivery is still being sorted out, and it must be turned off the day real
+SMS works.
+
+`DEV_OTP_ECHO` wins wherever it is set, **including over a real SMS gateway** —
+the shop needs to be able to sign in even when delivery is unreliable. On a real
+driver every code is then *also* sent as a paid SMS, so the server says so on
+boot and `SMS_DRIVER=console` is the cheaper way to test. Without the flag,
+only a development server on the console driver echoes.
 
 
 ## Sample data (`npm run seed:samples`)

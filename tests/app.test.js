@@ -59,11 +59,12 @@ describe('public api', () => {
     expect(verified.body.data.token).toBeTruthy();
   });
 
-  // The echo exists so the app can be tested before DLT approval. Two things
-  // must hold: a real gateway is never echoed, and in production it needs the
-  // switch. The production half is checked by hand (the environment is read
-  // once at import) — a NODE_ENV=production server returns no code by default,
-  // returns one with DEV_OTP_ECHO=true, and returns none again on a real driver.
+  // The echo exists so the app can be signed into while SMS delivery is still
+  // being sorted out. DEV_OTP_ECHO is deliberate and wins wherever it is set;
+  // without it only a development server on the console driver echoes. The
+  // combinations are checked by hand, because the environment is read once at
+  // import: production with the flag off returns no code, with it on returns
+  // one, and the same holds on a real SMS driver.
   it('the echoed code is the one that actually signs you in', async () => {
     const sent = await request(app)
       .post('/api/v1/auth/otp/send')
@@ -80,6 +81,20 @@ describe('public api', () => {
       .send({ mobile: '9876500022', code: sent.body.data.devCode });
     expect(right.status).toBe(200);
     expect(right.body.data.user.mobile).toBe('9876500022');
+  });
+
+  it('the echo follows the flag, not the driver', async () => {
+    const { boolish } = await import('../src/config/env.js');
+    // The rule, stated once so it cannot drift from the service.
+    const echoes = (devOtpEcho, smsDriver, isProd) =>
+      boolish(false).parse(devOtpEcho) || (!isProd && smsDriver === 'console');
+
+    expect(echoes('true', '2factor', true)).toBe(true);   // the shop asked for it
+    expect(echoes('true', 'console', true)).toBe(true);
+    expect(echoes(undefined, 'console', false)).toBe(true); // a dev machine
+    expect(echoes(undefined, 'console', true)).toBe(false); // never by accident
+    expect(echoes(undefined, '2factor', true)).toBe(false);
+    expect(echoes('false', '2factor', true)).toBe(false);  // off means off
   });
 
   it('an on/off flag only counts the words that mean on', async () => {
