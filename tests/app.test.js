@@ -83,6 +83,28 @@ describe('public api', () => {
     expect(right.body.data.user.mobile).toBe('9876500022');
   });
 
+  it('a browser on any local port may call the API', async () => {
+    // flutter run -d chrome picks a fresh port every time, so a fixed allow
+    // list can never contain it. Loopback is allowed on any port; a real site
+    // that is not configured still is not.
+    for (const origin of [
+      'http://localhost:54321', 'http://localhost:3000',
+      'http://127.0.0.1:61234', 'http://[::1]:8080',
+    ]) {
+      const res = await request(app).get('/api/v1/catalog/categories').set('Origin', origin);
+      expect(res.headers['access-control-allow-origin'], origin).toBe(origin);
+    }
+
+    const blocked = await request(app)
+      .get('/api/v1/catalog/categories')
+      .set('Origin', 'https://not-spocart.example.com');
+    expect(blocked.headers['access-control-allow-origin']).toBeUndefined();
+
+    // curl, the mobile app and webhooks send no Origin at all.
+    const none = await request(app).get('/api/v1/catalog/categories');
+    expect(none.status).toBe(200);
+  });
+
   it('the echo follows the flag, not the driver', async () => {
     const { boolish } = await import('../src/config/env.js');
     // The rule, stated once so it cannot drift from the service.
