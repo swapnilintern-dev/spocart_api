@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
 import { requireAuth } from '../middleware/auth.js';
-import { asyncHandler } from '../middleware/error.js';
+import { asyncHandler, ApiError } from '../middleware/error.js';
 import { otpLimiter } from '../middleware/rateLimit.js';
 import { ok } from '../utils/respond.js';
 import * as auth from '../services/auth.js';
@@ -79,6 +79,19 @@ r.post('/logout-all', requireAuth, asyncHandler(async (req, res) => {
   const { prisma } = await import('../db/prisma.js');
   await prisma.user.update({ where: { id: req.user.id }, data: { tokenVersion: { increment: 1 } } });
   ok(res, { signedOut: true });
+}));
+
+/**
+ * Closes the buyer's own account — the in-app deletion Google Play and the App
+ * Store require. Irreversible, and it signs out every device, so the client
+ * must confirm with the buyer before calling it. Admins cannot delete
+ * themselves this way: losing the admin account would lock the business out.
+ */
+r.delete('/me', requireAuth, asyncHandler(async (req, res) => {
+  if (req.user.role === 'admin') {
+    throw new ApiError(403, 'Admin accounts cannot be deleted from the app.');
+  }
+  ok(res, await auth.deleteAccount(req.user));
 }));
 
 export default r;

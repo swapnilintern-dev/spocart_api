@@ -69,3 +69,32 @@ export async function storeFile(file, folder) {
   return { url: uploaded.secure_url, path: uploaded.public_id, name: file.originalname, size: uploaded.bytes };
 }
 
+/**
+ * Removes one stored file, given whatever `storeFile` put in the database —
+ * a Cloudinary public_id, or a local path in development.
+ *
+ * Used when a buyer closes their account: artwork they uploaded is theirs, and
+ * leaving it on a CDN would mean the deletion only looked complete. Never
+ * throws — a file that is already gone, or a storage hiccup, must not abort the
+ * deletion of the records that actually matter.
+ */
+export async function deleteFile(stored) {
+  if (!stored || typeof stored !== 'string') return;
+
+  if (!usingCloudinary || stored.startsWith('/uploads/')) {
+    await fs.unlink(path.join('.', stored.replace(/^\//, ''))).catch(() => null);
+    return;
+  }
+
+  // The public_id does not say whether it went up as an image or a raw file,
+  // and destroying with the wrong resource_type is a no-op, so try both.
+  for (const resourceType of ['image', 'raw']) {
+    try {
+      const res = await cloudinary.uploader.destroy(stored, { resource_type: resourceType });
+      if (res?.result === 'ok') return;
+    } catch {
+      // Try the other type, then give up quietly.
+    }
+  }
+}
+

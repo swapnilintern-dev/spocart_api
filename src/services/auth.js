@@ -6,7 +6,9 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../db/prisma.js';
 import { env, adminMobiles, isProd } from '../config/env.js';
 import { ApiError } from '../middleware/error.js';
+import { nextId } from './ids.js';
 import { sendSms } from './sms.js';
+import { deleteFile } from './storage.js';
 import { toRupees } from '../utils/money.js';
 
 const OTP_TTL_MS = 5 * 60_000;
@@ -179,4 +181,95 @@ export async function confirmMobileChange(user, newMobile, code) {
   });
 
   return { token: signToken(updated), user: serializeUser(updated) };
+}
+
+/**
+ * Closes a buyer's account, as Google Play and the App Store require.
+ *
+ * The account is anonymised rather than dropped, because two obligations pull
+ * in opposite directions: the buyer may withdraw their data, but a GST tax
+ * invoice has to be kept for years and must carry the recipient's details.
+ * Both stores allow exactly this carve-out — data the law requires you to
+ * hold — provided the retention is spelled out in the privacy policy.
+ *
+ *   gone     — business profile (name, email, GSTIN), saved addresses, team
+ *              members, device tokens, notifications, reviews, pending OTPs,
+ *              quotations with the notes and artwork the buyer uploaded, and
+ *              enquiries they submitted from the website
+ *   scrubbed — the delivery mobile inside each stored invoice address: a GST
+ *              invoice needs the name, address and GSTIN, never the phone
+ *   neutered — the user row keeps its id so invoices still join, but the
+ *              mobile becomes a number nobody can dial or sign in with, every
+ *              session is invalidated and the credit line is closed
+ *   kept     — orders, their items, payments and the invoice address, which is
+ *              the legal record and no longer reaches a living account
+ *
+ * The freed mobile number can be registered again, as a brand-new account with
+ * none of the old history.
+ */
+export async function deleteAccount(user) {
+  const userId = user.id;
+
+  const result = await prisma.$transaction(async (tx) => {
+    // A placeholder that is unique, exactly 10 characters, and cannot be a real
+    // Indian mobile (those start 6-9). The shared counter makes it collision
+    // free without a second round trip.
+    const [, year, seq] = (await nextId(tx, 'DEL')).split('-');
+    const retiredMobile = `0${year.slice(2)}${seq.padStart(7, '0')}`;
+
+    // Collected before the rows go, so the files can be removed afterwards.
+    const quotes = await tx.quote.findMany({
+      where: { userId },
+      select: { id: true, designFileUrl: true },
+    });
+    const files = quotes.map((q) => q.designFileUrl).filter(Boolean);
+
+    await tx.quoteItem.deleteMany({ where: { quoteId: { in: quotes.map((q) => q.id) } } });
+    await tx.quote.deleteMany({ where: { userId } });
+
+    await tx.businessProfile.deleteMany({ where: { userId } });
+    await tx.address.deleteMany({ where: { userId } });
+    await tx.teamMember.deleteMany({ where: { userId } });
+    await tx.deviceToken.deleteMany({ where: { userId } });
+    await tx.notification.deleteMany({ where: { userId } });
+    await tx.review.deleteMany({ where: { userId } });
+    // Enquiries carry a name and number but no account, so they match on the
+    // number being released.
+    await tx.lead.deleteMany({ where: { mobile: user.mobile } });
+    // Any half-finished sign-in for that number.
+    await tx.otpCode.deleteMany({ where: { mobile: user.mobile } });
+
+    // The invoice address stays for GST, minus the phone number it does not
+    // need. Each row is rewritten individually because it is a JSON snapshot.
+    const orders = await tx.order.findMany({
+      where: { userId },
+      select: { id: true, address: true },
+    });
+    for (const order of orders) {
+      if (order.address && typeof order.address === 'object' && 'mobile' in order.address) {
+        const { mobile, ...rest } = order.address;
+        await tx.order.update({ where: { id: order.id }, data: { address: rest } });
+      }
+    }
+
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        mobile: retiredMobile,
+        creditLimit: 0n,
+        // Signs every device out, including the one that asked.
+        tokenVersion: { increment: 1 },
+      },
+    });
+
+    return { deleted: true, files };
+  });
+
+  // Outside the transaction: Cloudinary is a third party, and a failure there
+  // must not roll back a deletion the database has already committed.
+  for (const file of result.files) {
+    await deleteFile(file);
+  }
+
+  return { deleted: true };
 }
