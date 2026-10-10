@@ -8,30 +8,51 @@
 //
 // The password is typed at the prompt, never passed as an argument, so it does
 // not end up in your shell history or in the process list.
-import readline from 'node:readline';
-import { Writable } from 'node:stream';
+import * as readline from 'node:readline/promises';
 import { prisma } from '../src/db/prisma.js';
 import { hashPassword, MIN_PASSWORD_LENGTH } from '../src/services/password.js';
 import { adminMobiles } from '../src/config/env.js';
 
-/** Reads a line without echoing it to the terminal. */
-function askHidden(question) {
+const interactive = process.stdin.isTTY === true;
+
+/**
+ * Reads the password twice.
+ *
+ * At a terminal it prompts and hides the typing. Piped (a test, or CI) it
+ * takes the first two lines of stdin in one read: readline will not answer a
+ * second question on a stream that has already ended, which is a trap worth
+ * stepping around rather than into.
+ */
+async function readPasswordTwice() {
+  if (!interactive) {
+    const chunks = [];
+    for await (const chunk of process.stdin) chunks.push(chunk);
+    const [first = '', second = ''] = chunks.join('').split('\n');
+    return [first, second];
+  }
+
+  const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
+  // Hide the typing by swallowing the echo, so the prompt itself still prints.
   let muted = false;
-  const mutedOut = new Writable({
-    write(chunk, encoding, callback) {
-      if (!muted) process.stdout.write(chunk, encoding);
-      callback();
-    },
-  });
-  const rl = readline.createInterface({ input: process.stdin, output: mutedOut, terminal: true });
-  return new Promise((resolve) => {
-    rl.question(question, (answer) => {
-      rl.close();
-      process.stdout.write('\n');
-      resolve(answer);
-    });
+  const write = rl._writeToOutput.bind(rl);
+  rl._writeToOutput = (text) => {
+    if (!muted) write(text);
+  };
+
+  const ask = async (question) => {
+    const pending = rl.question(question);
     muted = true;
-  });
+    const value = await pending;
+    muted = false;
+    process.stdout.write('\n');
+    return value;
+  };
+
+  try {
+    return [await ask('  New password: '), await ask('  Type it again: ')];
+  } finally {
+    rl.close();
+  }
 }
 
 const fail = (message) => {
@@ -52,8 +73,8 @@ if (!adminMobiles.has(mobile)) {
   );
 }
 
-const password = await askHidden(`  New password for ${mobile}: `);
-const again = await askHidden('  Type it again: ');
+if (interactive) console.log(`\n  Setting the admin password for ${mobile}.`);
+const [password, again] = await readPasswordTwice();
 
 if (password !== again) fail('The two passwords do not match. Nothing was changed.');
 if (password.length < MIN_PASSWORD_LENGTH) {
