@@ -8,10 +8,10 @@
 //
 // The password is typed at the prompt, never passed as an argument, so it does
 // not end up in your shell history or in the process list.
-import * as readline from 'node:readline/promises';
 import { prisma } from '../src/db/prisma.js';
 import { hashPassword, MIN_PASSWORD_LENGTH } from '../src/services/password.js';
 import { adminMobiles } from '../src/config/env.js';
+import { askHidden } from './hidden-prompt.js';
 
 const interactive = process.stdin.isTTY === true;
 
@@ -31,29 +31,9 @@ async function readPasswordTwice() {
     return [first, second];
   }
 
-  const rl = readline.createInterface({ input: process.stdin, output: process.stdout, terminal: true });
-  // Hide the typing by swallowing the echo, so the prompt itself still prints.
-  let muted = false;
-  const write = rl._writeToOutput.bind(rl);
-  rl._writeToOutput = (text) => {
-    if (!muted) write(text);
-  };
-
-  const ask = async (question) => {
-    const pending = rl.question(question);
-    muted = true;
-    const value = await pending;
-    muted = false;
-    process.stdout.write('\n');
-    return value;
-  };
-
-  try {
-    return [await ask('  New password: '), await ask('  Type it again: ')];
-  } finally {
-    rl.close();
-  }
+  return [await askHidden('  New password: '), await askHidden('  Type it again: ')];
 }
+
 
 const fail = (message) => {
   console.error(`\n  ${message}\n`);
