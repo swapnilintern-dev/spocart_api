@@ -7,6 +7,7 @@ import { prisma } from '../db/prisma.js';
 import { env, adminMobiles, isProd } from '../config/env.js';
 import { ApiError } from '../middleware/error.js';
 import { nextId } from './ids.js';
+import { hashPassword, verifyPassword } from './password.js';
 import { sendSms } from './sms.js';
 import { deleteFile } from './storage.js';
 import { toRupees } from '../utils/money.js';
@@ -77,8 +78,69 @@ export async function consumeOtp(mobile, code, purpose = 'login') {
 }
 
 export async function verifyOtp(mobile, code) {
+  await assertNotAdmin(mobile);
   await consumeOtp(mobile, code, 'login');
   return signIn(mobile);
+}
+
+/**
+ * Keeps admins out of the customer sign-in, which is the only one the mobile
+ * app knows how to call. An admin therefore cannot sign in on the app at all:
+ * their route is `adminSignIn` below, and only the website calls it.
+ *
+ * Checked against ADMIN_MOBILES rather than the stored role, so it holds even
+ * for a number that has been listed but never signed in yet.
+ */
+export async function assertNotAdmin(mobile) {
+  if (!adminMobiles.has(mobile)) return;
+  throw new ApiError(403, 'Admin accounts sign in on the SPOCART admin website, not here.');
+}
+
+/**
+ * Step 1 of the admin sign-in: the password. Correct password issues the
+ * second factor; nothing is returned that could be used as a session.
+ *
+ * The failure message is deliberately identical for an unknown number, a
+ * number with no password set and a wrong password, so this cannot be used to
+ * work out which mobile numbers are admins.
+ */
+export async function adminLogin(mobile, password) {
+  const user = adminMobiles.has(mobile)
+    ? await prisma.user.findUnique({ where: { mobile } })
+    : null;
+
+  const ok = user?.role === 'admin' && (await verifyPassword(password, user.passwordHash));
+  if (!ok) throw new ApiError(401, 'Incorrect mobile number or password.');
+
+  return issueOtp(mobile, 'adminLogin');
+}
+
+/** Step 2 of the admin sign-in: the code sent after the password checked out. */
+export async function adminVerify(mobile, code) {
+  await consumeOtp(mobile, code, 'adminLogin');
+  const user = await prisma.user.findUnique({ where: { mobile }, include: { profile: true } });
+  if (user?.role !== 'admin') throw new ApiError(403, 'This account is not an admin.');
+  return { token: signToken(user), user: serializeUser(user) };
+}
+
+/**
+ * An admin changing their own password. The current one is required, so a
+ * borrowed unlocked browser cannot be used to lock the real admin out, and
+ * every other session is dropped because a password change is exactly when
+ * you want any session you did not start to end.
+ */
+export async function changeAdminPassword(user, currentPassword, newPassword) {
+  if (!(await verifyPassword(currentPassword, user.passwordHash))) {
+    throw new ApiError(401, 'Your current password is incorrect.');
+  }
+  if (currentPassword === newPassword) {
+    throw new ApiError(400, 'The new password must be different from the current one.');
+  }
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { passwordHash: await hashPassword(newPassword), tokenVersion: { increment: 1 } },
+  });
+  return { changed: true };
 }
 
 /**

@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { validate } from '../middleware/validate.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requireAdmin } from '../middleware/auth.js';
 import { asyncHandler, ApiError } from '../middleware/error.js';
 import { otpLimiter } from '../middleware/rateLimit.js';
 import { ok } from '../utils/respond.js';
 import * as auth from '../services/auth.js';
+import { MIN_PASSWORD_LENGTH } from '../services/password.js';
 import { mobileFromIdToken, firebaseEnabled } from '../services/firebase.js';
 import { mobile, gstin, email, businessType } from './_schemas.js';
 import { env, isProd } from '../config/env.js';
@@ -27,6 +28,10 @@ r.get('/methods', (_req, res) => ok(res, {
 }));
 
 r.post('/otp/send', otpLimiter, validate(z.object({ mobile })), asyncHandler(async (req, res) => {
+  // Refused here as well as in verifyOtp, so an admin who types their number
+  // into the app is told immediately rather than after waiting for an SMS
+  // that was never going to work.
+  await auth.assertNotAdmin(req.body.mobile);
   ok(res, await auth.sendOtp(req.body.mobile));
 }));
 
@@ -41,7 +46,37 @@ r.post('/otp/verify', otpLimiter, validate(z.object({ mobile, code: z.string().r
  */
 r.post('/firebase', otpLimiter, validate(z.object({ idToken: z.string().min(20) })), asyncHandler(async (req, res) => {
   const mobile = await mobileFromIdToken(req.body.idToken);
+  // The other door into a customer session, so it carries the same bar: an
+  // admin proving their phone number still does not get an admin session here.
+  await auth.assertNotAdmin(mobile);
   ok(res, await auth.signIn(mobile));
+}));
+
+// ── Admin sign-in: password, then OTP ───────────────────────────────────────
+// Two factors because an admin can issue refunds, move credit limits and read
+// every customer. Only the admin website calls these; the mobile app has no
+// admin panel and no way in (see assertNotAdmin on the customer routes).
+
+r.post('/admin/login', otpLimiter, validate(z.object({
+  mobile,
+  password: z.string().min(1, 'Enter your password'),
+})), asyncHandler(async (req, res) => {
+  ok(res, await auth.adminLogin(req.body.mobile, req.body.password));
+}));
+
+r.post('/admin/verify', otpLimiter, validate(z.object({
+  mobile,
+  code: z.string().regex(/^\d{6}$/, 'Enter the 6-digit OTP'),
+})), asyncHandler(async (req, res) => {
+  ok(res, await auth.adminVerify(req.body.mobile, req.body.code));
+}));
+
+r.post('/admin/password', requireAuth, requireAdmin, validate(z.object({
+  currentPassword: z.string().min(1, 'Enter your current password'),
+  newPassword: z.string().min(MIN_PASSWORD_LENGTH,
+    `Password must be at least ${MIN_PASSWORD_LENGTH} characters`),
+})), asyncHandler(async (req, res) => {
+  ok(res, await auth.changeAdminPassword(req.user, req.body.currentPassword, req.body.newPassword));
 }));
 
 r.get('/me', requireAuth, (req, res) => ok(res, auth.serializeUser(req.user)));

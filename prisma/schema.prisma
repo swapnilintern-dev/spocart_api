@@ -26,6 +26,9 @@ enum UserRole {
 enum OtpPurpose {
   login
   mobileChange
+  /// Second factor for an admin, issued only after the password checked out.
+  /// Separate from `login` so a code meant for one can never satisfy the other.
+  adminLogin
 }
 
 enum BusinessType {
@@ -173,6 +176,9 @@ model User {
   id            String           @id @default(uuid()) @db.Uuid
   mobile        String           @unique @db.Char(10)
   role          UserRole         @default(buyer)
+  /// Admins only. Buyers sign in with an OTP alone and never have one, so this
+  /// stays null for them. Format: scrypt, as "scrypt$<salt hex>$<hash hex>".
+  passwordHash  String?          @map("password_hash")
   creditLimit   BigInt           @default(10000000) @map("credit_limit")
   tokenVersion  Int              @default(0) @map("token_version")
   createdAt     DateTime         @default(now()) @map("created_at")
