@@ -127,29 +127,23 @@ export async function placeOrder(user, { lines, addressId, paymentMethod }) {
   const { subtotal, gst, total } = totals(items);
   const isCredit = paymentMethod === 'payLater';
 
-  if (isCredit) {
-    const available = user.creditLimit - (await outstandingCredit(prisma, user.id));
-    if (total > available) {
-      throw new ApiError(400, `This order exceeds your available credit of ${inr(available)}. Pay online or reduce the order.`);
-    }
-  }
+  const status = isCredit ? 'placed' : 'paymentPending';
 
-  return prisma.$transaction(async (tx) => {
+  const created = await prisma.$transaction(async (tx) => {
+    // Credit is checked here, not before, and behind a lock on the buyer's own
+    // row: two taps on a slow network used to read the same "available" and
+    // both pass, letting an order go through twice over the limit.
+    if (isCredit) {
+      await tx.$queryRaw`SELECT id FROM users WHERE id = ${user.id}::uuid FOR UPDATE`;
+      const available = user.creditLimit - (await outstandingCredit(tx, user.id));
+      if (total > available) {
+        throw new ApiError(400, `This order exceeds your available credit of ${inr(available)}. Pay online or reduce the order.`);
+      }
+    }
+
     const id = await nextId(tx, 'SC');
     const invoiceId = await nextId(tx, 'INV');
-    const status = isCredit ? 'placed' : 'paymentPending';
     const now = new Date();
-
-    let razorpayOrderId = null;
-    if (!isCredit) {
-      const rzp = await razorpay.orders.create({
-        amount: Number(total),
-        currency: 'INR',
-        receipt: id,
-        notes: { orderId: id, userId: user.id },
-      });
-      razorpayOrderId = rzp.id;
-    }
 
     const order = await tx.order.create({
       data: {
@@ -175,7 +169,7 @@ export async function placeOrder(user, { lines, addressId, paymentMethod }) {
           label: address.label,
           isDefault: address.isDefault,
         },
-        razorpayOrderId,
+        razorpayOrderId: null,
         trackingId: `SPK${now.getTime().toString().slice(-8)}`,
         etaStart: addDays(now, 3),
         etaEnd: addDays(now, 7),
@@ -194,11 +188,45 @@ export async function placeOrder(user, { lines, addressId, paymentMethod }) {
       });
     }
 
-    return {
-      order: serializeOrder(order),
-      checkout: isCredit ? null : checkoutFor(order, user.profile, razorpayOrderId),
-    };
+    return order;
   });
+
+  if (isCredit) {
+    return { order: serializeOrder(created), checkout: null };
+  }
+
+  // Razorpay is an HTTP call to someone else's server, so it happens after the
+  // transaction has committed. Holding database locks — including the id
+  // counter every other order waits on — across a network round trip is how a
+  // slow payment gateway becomes a stuck shop, and Prisma would abort the
+  // transaction anyway once it ran long.
+  //
+  // If it fails the order still exists, awaiting payment with no session: the
+  // app's "Pay Now" creates one through retryPayment, and the expiry job
+  // cancels it if nobody does.
+  let razorpayOrderId;
+  try {
+    const rzp = await razorpay.orders.create({
+      amount: Number(total),
+      currency: 'INR',
+      receipt: created.id,
+      notes: { orderId: created.id, userId: user.id },
+    });
+    razorpayOrderId = rzp.id;
+  } catch (e) {
+    throw new ApiError(502, 'Could not start the payment. Your order is saved — open it and tap Pay Now.');
+  }
+
+  const order = await prisma.order.update({
+    where: { id: created.id },
+    data: { razorpayOrderId },
+    include: orderInclude,
+  });
+
+  return {
+    order: serializeOrder(order),
+    checkout: checkoutFor(order, user.profile, razorpayOrderId),
+  };
 }
 
 /** New Razorpay order for an unpaid order (the previous one expired or failed). */

@@ -395,3 +395,36 @@ product's stars always come from real reviews, and a product with none says
 
 Everything it writes is a stand-in meant to be replaced — above all the
 barcodes and the video link.
+
+
+## Where an order's status lives
+
+| What | Where | Who writes it |
+|---|---|---|
+| Current state | `orders.status` + `orders.status_updated_at` | the server only |
+| Paid or not | `orders.paid` | only a verified payment |
+| Every change, with a note | `order_status_history` | appended, never edited |
+| Each payment attempt | `payments` (`created` / `captured` / `failed` / `refunded`) | the gateway's answer |
+| Razorpay's handle on it | `orders.razorpay_order_id`, `payments.razorpay_payment_id` | unique, so one payment counts once |
+
+A buyer's app never sets a status. `POST /orders` always re-prices from the
+product tiers and ignores whatever totals the client sent; every read and write
+is scoped to `userId`, so one buyer cannot see or touch another's order.
+
+**Three holes this path used to have, and what closed them:**
+
+- **Credit limit, concurrently.** The check ran before the transaction, so two
+  taps on a slow network both read the same available credit and both passed —
+  measured at twice the limit with five simultaneous orders. The check now runs
+  inside the transaction behind `SELECT … FOR UPDATE` on the buyer's row.
+- **A short payment** would have marked an order paid. It is now recorded and
+  written into the order's history as needing review; the order stays unpaid.
+- **Money arriving after an order expired** left the buyer having paid for
+  nothing. A captured payment now reinstates a cancelled order, with the reason
+  in its history.
+
+Razorpay is called **after** the transaction commits, never inside it: holding
+the id counter every other order waits on across someone else's network round
+trip is how a slow gateway becomes a stuck shop. If that call fails the order is
+already saved, awaiting payment — "Pay Now" creates a fresh session, and the
+expiry job cancels it if nobody does.

@@ -6,6 +6,7 @@ import { prisma } from '../db/prisma.js';
 import { env } from '../config/env.js';
 import { ApiError } from '../middleware/error.js';
 import { notify } from './notify.js';
+import { inr } from '../utils/money.js';
 import { creditForOrder, syncTiers } from './rewards.js';
 import { orderInclude } from './orders.js';
 import { razorpay } from './razorpay.js';
@@ -48,19 +49,47 @@ export async function markCaptured({ order, razorpayPaymentId, amount, method, r
     }
 
     const current = await tx.order.findUnique({ where: { id: order.id } });
-    if (current.status === 'paymentPending' || !current.paid) {
+
+    // Short payment: the money is recorded, but the order is not marked paid.
+    // Razorpay orders are fixed-amount so this should never happen — and if it
+    // ever does, a human settles it rather than the shop shipping for less.
+    if (BigInt(amount) < current.total) {
+      await tx.orderStatusHistory.create({
+        data: {
+          orderId: order.id,
+          status: current.status,
+          note: `Part payment of ${inr(BigInt(amount))} received against ${inr(current.total)} (${source}). Needs review.`,
+        },
+      });
+      return tx.order.findUnique({ where: { id: order.id }, include: orderInclude });
+    }
+
+    // A payment can land after the order was cancelled for not being paid in
+    // time. The money is real, so the order comes back rather than the buyer
+    // being left having paid for nothing.
+    const revive = current.status === 'cancelled' && !current.paid;
+    const opening = current.status === 'paymentPending' || revive;
+
+    if (opening || !current.paid) {
       await tx.order.update({
         where: { id: order.id },
         data: {
           paid: true,
-          ...(current.status === 'paymentPending' && {
+          ...(opening && {
             status: 'placed',
             statusUpdatedAt: new Date(),
-            history: { create: { status: 'placed', note: `Paid via Razorpay (${source})` } },
+            history: {
+              create: {
+                status: 'placed',
+                note: revive
+                  ? `Paid via Razorpay (${source}) after the order had expired — reinstated`
+                  : `Paid via Razorpay (${source})`,
+              },
+            },
           }),
         },
       });
-      if (current.status === 'paymentPending') {
+      if (opening) {
         await notify(tx, order.userId, {
           type: 'orderPlaced',
           title: 'Order Placed',
