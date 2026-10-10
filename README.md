@@ -428,3 +428,56 @@ the id counter every other order waits on across someone else's network round
 trip is how a slow gateway becomes a stuck shop. If that call fails the order is
 already saved, awaiting payment — "Pay Now" creates a fresh session, and the
 expiry job cancels it if nobody does.
+
+
+## Bulk product import (`/api/v1/admin/products/import`)
+
+One sheet, one row per product. A data-entry employee fills it in; an admin
+uploads it in the admin panel.
+
+| Route | What it does |
+|---|---|
+| `GET /admin/products/import/template` | downloads `spocart-products-template.xlsx` — the columns in order, one worked example, and a **Reference** sheet listing every category, its sub-categories and what each column expects |
+| `POST /admin/products/import?dryRun=true` | checks the file and reports, changing nothing |
+| `POST /admin/products/import` | imports it |
+
+Accepts `.xlsx` and `.csv`, up to 10 MB and 2,000 rows.
+
+**Nothing is written unless the whole sheet is valid.** One bad row and the file
+changes nothing at all — half an import is worse than none. Every problem comes
+back naming the row and the column:
+
+```
+row 3   categoryId    no category "criket". Use one of: cricket, football, …
+row 4   subcategory   "Shoes" is not in cricket. Use one of: Bats, Balls, Gear, Sets
+row 5   tier1_minQty  The first tier must start at the MOQ (10)
+row 6   tier1_minQty  Tier prices must decrease as quantity grows
+row 7   image1        must be a full https link — paste the Cloudinary URL
+```
+
+**Sending the same sheet again updates** rather than duplicating — the id is the
+key, so the sheet stays the source of truth and can be corrected and re-sent.
+A price lowered by the sheet is recorded like any other price change and reaches
+the Deals shelf.
+
+### Columns
+
+Required: `id`, `categoryId`, `subcategory`, `name`, `brand`, `unit`, `moq`,
+`tier1_minQty`, `tier1_price`, `image1`.
+
+Optional: `tier2…tier5_minQty/_price`, `image2…image5`, `description`, `sizes`,
+`features`, `stockQty`, `barcode`, `videoUrl`, `inStock`, `popular`,
+`customisable`, `active`.
+
+- `id` — lowercase, hyphens, e.g. `ck-kashmir-willow-bat`. Re-using one updates
+  that product.
+- `tier1_minQty` must equal `moq`; each later slab needs a **higher quantity**
+  and a **lower price**.
+- `image1…5` — full Cloudinary https links. Stored canonically, so optimisation
+  is applied at delivery and can be changed later without touching the rows.
+- `sizes`, `features` — comma separated. A value containing a comma must be
+  quoted, which Excel does automatically.
+- `stockQty` — blank means stock is not tracked and the app says nothing about
+  how many are left.
+- `inStock`/`popular`/`customisable`/`active` — `yes` or `no`; blank takes the
+  sensible default.

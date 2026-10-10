@@ -24,6 +24,7 @@ import { bestSellerReport, clearBestSellerCache } from '../services/bestSellers.
 import { recordPriceChange, entryPrice, notifyPriceDrops } from '../services/deals.js';
 import { canonicalVideoUrl } from '../services/videoUrl.js';
 import { reviewQueue, moderateReview } from '../services/reviews.js';
+import { importProducts, templateWorkbook } from '../services/productImport.js';
 import {
   settings as rewardSettings,
   serializeSettings,
@@ -423,6 +424,44 @@ const catalogUpload = multer({
     cb(null, true);
   },
 });
+// ── Bulk product import ─────────────────────────────────────────────────────
+// A data-entry employee fills the template; an admin uploads it. Nothing is
+// written unless the whole sheet is valid, and `dryRun` checks it first.
+
+/** The template to hand the employee: columns, an example, and a reference. */
+r.get('/products/import/template', asyncHandler(async (_req, res) => {
+  const wb = await templateWorkbook();
+  res.setHeader('Content-Type',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+  res.setHeader('Content-Disposition',
+    'attachment; filename="spocart-products-template.xlsx"');
+  await wb.xlsx.write(res);
+  res.end();
+}));
+
+const sheetUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (_req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext !== '.xlsx' && ext !== '.csv') {
+      return cb(new ApiError(400, 'Upload the filled template as .xlsx or .csv.'));
+    }
+    cb(null, true);
+  },
+});
+
+/**
+ * Imports the sheet. `?dryRun=true` validates and reports without changing
+ * anything — the admin panel should always run that first and show the result.
+ */
+r.post('/products/import', sheetUpload.single('file'), asyncHandler(async (req, res) => {
+  const result = await importProducts(req.file, {
+    dryRun: req.query.dryRun === 'true' || req.body?.dryRun === 'true',
+  });
+  ok(res, result, result.ok ? 200 : 422);
+}));
+
 r.post('/uploads/catalog', catalogUpload.single('file'), asyncHandler(async (req, res) => {
   if (!req.file) throw new ApiError(400, 'Attach an image in the "file" field.');
   ok(res, await storeFile(req.file, req.query.folder === 'categories' ? 'categories' : 'products'), 201);
