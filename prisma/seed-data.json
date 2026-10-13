@@ -144,8 +144,7 @@
       "moq": 10,
       "description": "Seasoned Kashmir willow with a full profile and thick edges — built for academy nets and club matches. Pre-knocked and fitted with a multi-colour grip.",
       "images": [
-        "/uploads/catalog/cricket_ball.jpg",
-        "/uploads/catalog/warehouse_aisle.jpg"
+        "/uploads/catalog/ck-kashmir-willow-bat.jpg"
       ],
       "sizes": [
         "SH",
@@ -201,7 +200,7 @@
       "moq": 5,
       "description": "Grade-2 English willow with a mid-to-low sweet spot for tournament play. Ideal for academy elite squads and retail display.",
       "images": [
-        "/uploads/catalog/cricket_ball.jpg"
+        "/uploads/catalog/ck-english-willow-bat.jpg"
       ],
       "sizes": [
         "SH",
@@ -251,7 +250,7 @@
       "moq": 24,
       "description": "Four-piece alum-tanned leather ball with a hand-stitched seam. Holds shape across long practice sessions.",
       "images": [
-        "/uploads/catalog/cricket_ball.jpg"
+        "/uploads/catalog/ck-ss-ball.jpg"
       ],
       "sizes": [],
       "features": [
@@ -301,7 +300,9 @@
       "unit": "pc",
       "moq": 6,
       "description": "ABS shell with a steel grille and adjustable rear strap. Meets BS7928 safety standards — mandatory for academy programmes.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/ck-batting-helmet.jpg"
+      ],
       "sizes": [
         "S",
         "M",
@@ -355,7 +356,9 @@
       "unit": "pair",
       "moq": 12,
       "description": "Breathable mesh upper with rubber-stud outsole for turf and matting wickets. Available in a full institutional size run.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/ck-cricket-shoes.jpg"
+      ],
       "sizes": [
         "6",
         "7",
@@ -412,7 +415,7 @@
       "moq": 5,
       "description": "Complete player set: Kashmir willow bat, batting pads, gloves, thigh guard, abdo guard and a wheeled kit bag. Bulk-ready for academies.",
       "images": [
-        "/uploads/catalog/warehouse_aisle.jpg"
+        "/uploads/catalog/ck-academy-kit.jpg"
       ],
       "sizes": [
         "Youth",
@@ -461,7 +464,9 @@
       "unit": "set",
       "moq": 10,
       "description": "Seasoned wood stumps with steel-tipped bases and a pair of bails. Regulation dimensions for match and practice grounds.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/ck-stumps-set.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -503,8 +508,7 @@
       "moq": 20,
       "description": "Thermo-bonded 32-panel match ball with a butyl bladder for shape and air retention across all-weather play.",
       "images": [
-        "/uploads/catalog/footballs_stack.jpg",
-        "/uploads/catalog/football_match.jpg"
+        "/uploads/catalog/fb-match-ball-5.jpg"
       ],
       "sizes": [
         "5",
@@ -559,7 +563,7 @@
       "moq": 30,
       "description": "Machine-stitched PU training ball built for daily drills on grass and artificial turf. The high-volume academy workhorse.",
       "images": [
-        "/uploads/catalog/footballs_stack.jpg"
+        "/uploads/catalog/fb-training-ball.jpg"
       ],
       "sizes": [
         "5",
@@ -604,7 +608,9 @@
       "unit": "set",
       "moq": 5,
       "description": "High-visibility marker cones with a carry stand — the coaching essential for drills and agility grids.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/fb-cone-set.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -646,7 +652,7 @@
       "moq": 15,
       "description": "Moisture-wicking polyester jersey with full sublimation printing — crest, numbers and sponsor logos included in the price.",
       "images": [
-        "/uploads/catalog/football_match.jpg"
+        "/uploads/catalog/fb-team-jersey.jpg"
       ],
       "sizes": [
         "XS",
@@ -703,7 +709,9 @@
       "unit": "pair",
       "moq": 10,
       "description": "Latex palm with finger-save spines and a double wrist strap. Sized for youth through senior keepers.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/fb-goalkeeper-gloves.jpg"
+      ],
       "sizes": [
         "6",
         "7",
@@ -755,7 +763,7 @@
       "moq": 10,
       "description": "Full-graphite frame with an isometric head for a larger sweet spot. Strung and covered — ready for the court.",
       "images": [
-        "/uploads/catalog/hero_badminton.jpg"
+        "/uploads/catalog/bd-graphite-racket.jpg"
       ],
       "sizes": [],
       "features": [
@@ -806,7 +814,7 @@
       "moq": 10,
       "description": "Tournament-speed goose-feather shuttles on a natural cork base for true flight and consistent match play.",
       "images": [
-        "/uploads/catalog/hero_badminton.jpg"
+        "/uploads/catalog/bd-feather-shuttle.jpg"
       ],
       "sizes": [],
       "features": [
@@ -848,7 +856,9 @@
       "unit": "box",
       "moq": 20,
       "description": "Durable nylon-skirt shuttles for school and club training. Medium speed, long life on indoor and outdoor courts.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/bd-nylon-shuttle.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -889,7 +899,9 @@
       "unit": "pc",
       "moq": 5,
       "description": "Braided nylon net with a vinyl-coated headband and tension cord. Regulation 6.1 m width for competition courts.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/bd-net-set.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -930,7 +942,9 @@
       "unit": "pc",
       "moq": 10,
       "description": "Composite-leather ball with deep channels for court control — indoor/outdoor rated for institutional fixtures.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/bb-indoor-7.jpg"
+      ],
       "sizes": [
         "7",
         "6",
@@ -979,7 +993,9 @@
       "unit": "pc",
       "moq": 20,
       "description": "All-weather anti-whip net with 12 loops — the high-volume court replacement essential.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/bb-hoop-net.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -1020,7 +1036,9 @@
       "unit": "pc",
       "moq": 12,
       "description": "Five-ply blade with pimples-in rubber and a flared handle — a balanced all-round bat for school and club programmes.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/tt-bat-pro.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -1061,7 +1079,9 @@
       "unit": "box",
       "moq": 10,
       "description": "40+ mm seamless poly balls, ITTF-approved 3-star grade. Consistent bounce for competition play.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/tt-balls-box.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -1103,7 +1123,7 @@
       "moq": 6,
       "description": "Graphite-composite frame, 100 sq in head, strung — a forgiving racket for academy intermediates.",
       "images": [
-        "/uploads/catalog/tennis_clay.jpg"
+        "/uploads/catalog/tn-racket-graphite.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1150,7 +1170,7 @@
       "moq": 24,
       "description": "Pressurised ITF-approved balls in a sealed can. Extra-duty felt for hard courts.",
       "images": [
-        "/uploads/catalog/tennis_clay.jpg"
+        "/uploads/catalog/tn-balls-can.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1192,7 +1212,9 @@
       "unit": "pc",
       "moq": 10,
       "description": "30% carbon composite stick with a mid-bow profile. Sized 34\"–37\" for school and academy squads.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/hk-stick-composite.jpg"
+      ],
       "sizes": [
         "34\"",
         "35\"",
@@ -1242,7 +1264,9 @@
       "unit": "pc",
       "moq": 24,
       "description": "PVC dimpled ball for astro-turf; consistent roll and low bounce for match and drill use.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/hk-turf-ball.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -1283,7 +1307,9 @@
       "unit": "pc",
       "moq": 12,
       "description": "18-panel PU laminated volleyball with a butyl bladder — soft touch for indoor and beach play.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/vb-match-ball.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -1328,7 +1354,9 @@
       "unit": "pc",
       "moq": 5,
       "description": "9.5 m braided net with steel cable, side tapes and antenna pockets. Regulation for institutional courts.",
-      "images": [],
+      "images": [
+        "/uploads/catalog/vb-net.jpg"
+      ],
       "sizes": [],
       "features": [
         {
@@ -1370,7 +1398,7 @@
       "moq": 6,
       "description": "Height-adjustable competition hurdle with a weighted, powder-coated base for stability across athletics programmes.",
       "images": [
-        "/uploads/catalog/runners_group.jpg"
+        "/uploads/catalog/at-hurdle.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1413,7 +1441,7 @@
       "moq": 5,
       "description": "Regulation anodised aluminium batons in eight colours — a complete set for track events.",
       "images": [
-        "/uploads/catalog/runners_group.jpg"
+        "/uploads/catalog/at-relay-baton.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1456,7 +1484,7 @@
       "moq": 20,
       "description": "Lightweight mesh runner with an EVA midsole for daily training. Full size run for schools and academies.",
       "images": [
-        "/uploads/catalog/runners_group.jpg"
+        "/uploads/catalog/at-running-shoes.jpg"
       ],
       "sizes": [
         "5",
@@ -1511,7 +1539,7 @@
       "moq": 20,
       "description": "Anti-fog, UV-protected lenses with a silicone seal and quick-adjust strap. Youth and adult fits.",
       "images": [
-        "/uploads/catalog/swimmer.jpg"
+        "/uploads/catalog/sw-goggles.jpg"
       ],
       "sizes": [
         "Youth",
@@ -1557,7 +1585,7 @@
       "moq": 30,
       "description": "Seamless moulded silicone cap — tear-resistant, printable with the club or academy crest.",
       "images": [
-        "/uploads/catalog/swimmer.jpg"
+        "/uploads/catalog/sw-silicone-cap.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1600,7 +1628,7 @@
       "moq": 15,
       "description": "High-density EVA foam kickboard with moulded hand grips for learn-to-swim and training programmes.",
       "images": [
-        "/uploads/catalog/swimmer.jpg"
+        "/uploads/catalog/sw-kickboard.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1643,8 +1671,7 @@
       "moq": 3,
       "description": "Hex rubber-coated dumbbells with knurled chrome handles — built for high-traffic institutional gyms.",
       "images": [
-        "/uploads/catalog/gym_dumbbells.jpg",
-        "/uploads/catalog/gym_studio.jpg"
+        "/uploads/catalog/ft-dumbbell-set.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1687,7 +1714,7 @@
       "moq": 20,
       "description": "High-density NBR mat with reinforced edges, sized for studio and multipurpose-hall use.",
       "images": [
-        "/uploads/catalog/fitness_accessories.jpg"
+        "/uploads/catalog/ft-exercise-mat.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1734,7 +1761,7 @@
       "moq": 10,
       "description": "Five latex loop bands from extra-light to extra-heavy in a mesh carry pouch. Rehab, warm-up and strength work.",
       "images": [
-        "/uploads/catalog/fitness_accessories.jpg"
+        "/uploads/catalog/ft-resistance-bands.jpg"
       ],
       "sizes": [],
       "features": [
@@ -1777,7 +1804,7 @@
       "moq": 25,
       "description": "Steel-cable rope with ball-bearing handles and an adjustable length. A conditioning staple for every sport.",
       "images": [
-        "/uploads/catalog/gym_studio.jpg"
+        "/uploads/catalog/ft-skipping-rope.jpg"
       ],
       "sizes": [],
       "features": [
