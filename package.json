@@ -20,6 +20,7 @@
     "start:neon": "DATABASE_URL=\"$(grep '^DATABASE_URL=' .env.production | cut -d= -f2- | tr -d '\"')\" node src/server.js",
     "migrate:uploads": "node scripts/migrate-uploads-to-cloudinary.js",
     "photos:products": "node scripts/set-product-photos.js",
+    "photos:products:neon": "DATABASE_URL=\"$(grep '^DATABASE_URL=' .env.production | cut -d= -f2- | tr -d '\"')\" node scripts/set-product-photos.js",
     "test:otp": "node scripts/test-otp.js"
   },
   "keywords": [],
