@@ -1,6 +1,11 @@
 // Sets each product's photo from uploads/catalog/<product-id>.jpg and replaces
 // products.images with it. Products without a matching file are left alone.
 //
+// The filename IS the product id, so a photo cannot end up on the wrong
+// product: there is no mapping to get wrong. On Cloudinary the asset is stored
+// under that same id, so the URL names its product too, and a product already
+// pointing at its own asset is skipped — safe to re-run.
+//
 // Two ways to host the photo:
 //   default   upload the file to Cloudinary (needs the CLOUDINARY_* variables)
 //   --local   point the product at /uploads/catalog/<file>, which the API serves
@@ -39,18 +44,24 @@ async function main() {
   let updated = 0;
   const missing = [];
   const notServed = [];
+  const already = [];
 
   for (const p of products) {
     const name = `${p.id}.jpg`;
     if (!files.has(name)) { missing.push(p.id); continue; }
     const relative = `/${DIR}/${name}`;
     if (LOCAL && !(await isServed(relative))) { notServed.push(p.id); continue; }
-    if (!APPLY) { console.log(`  ${p.id.padEnd(28)} ${p.images[0] ?? '(none)'}  →  ${relative}`); updated++; continue; }
+    // Already pointing at this product's own named Cloudinary asset.
+    if (!LOCAL && (p.images[0] ?? '').includes(`/spocart/products/${p.id}`)) { already.push(p.id); continue; }
+    if (!APPLY) { console.log(`  ${p.id.padEnd(28)} ${(p.images[0] ?? '(none)').slice(-58).padEnd(58)}  →  ${LOCAL ? relative : `spocart/products/${p.id}`}`); updated++; continue; }
 
     let url = relative;
     if (!LOCAL) {
       const buffer = await fs.readFile(path.join(DIR, name));
-      url = (await storeFile({ buffer, originalname: name, size: buffer.length }, 'products')).url;
+      // public_id = the product id. The URL then names the product it belongs
+      // to, and running this again replaces that asset rather than adding a
+      // second copy.
+      url = (await storeFile({ buffer, originalname: name, size: buffer.length }, 'products', { publicId: p.id })).url;
     }
     await prisma.product.update({ where: { id: p.id }, data: { images: [url] } });
     console.log(`  ${p.id.padEnd(28)} → ${url}`);
@@ -58,6 +69,7 @@ async function main() {
   }
 
   console.log(`\nproducts ${APPLY ? 'updated' : 'to update'}: ${updated} of ${products.length}`);
+  if (already.length) console.log(`already on their own Cloudinary asset (skipped): ${already.length}`);
   if (missing.length) console.log('no photo file for:', missing);
   if (notServed.length) console.log(`not served by ${env.PUBLIC_BASE_URL} yet (deploy first):`, notServed);
   console.log(APPLY ? '\nDone.' : '\nDry run complete — re-run with --apply to write.');

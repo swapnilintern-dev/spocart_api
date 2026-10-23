@@ -36,8 +36,16 @@ export const canonicalImageUrl = (url) =>
 /**
  * Stores one uploaded file and returns { url, path, name, size }.
  * `url` is what goes into the database and is served to the app and website.
+ *
+ * `publicId` names the asset instead of letting Cloudinary pick a random one.
+ * Catalogue photos pass the product id, which buys two things: the URL says
+ * which product the photo belongs to, so a mismatch is visible rather than
+ * hidden; and re-uploading replaces that one asset instead of leaving a copy
+ * behind, so the photo script can be run again safely. Everything a buyer
+ * uploads keeps a random id — artwork should not be guessable from a product
+ * code.
  */
-export async function storeFile(file, folder) {
+export async function storeFile(file, folder, { publicId } = {}) {
   if (!file) throw new ApiError(400, 'No file received.');
 
   if (!usingCloudinary) {
@@ -55,9 +63,11 @@ export async function storeFile(file, folder) {
       {
         folder: `spocart/${folder}`,
         resource_type: isImage(file.originalname) ? 'image' : 'raw',
-        use_filename: false,             // random public_id — files are not guessable
-        unique_filename: true,
-        overwrite: false,
+        ...(publicId
+          // A named asset: replace it in place and purge the CDN copy.
+          ? { public_id: publicId, use_filename: false, unique_filename: false, overwrite: true, invalidate: true }
+          // The default: a random public_id, so files are not guessable.
+          : { use_filename: false, unique_filename: true, overwrite: false }),
         // Keep the original but cap huge photos; delivery still re-optimises per request.
         ...(isImage(file.originalname) && { transformation: [{ width: 1600, height: 1600, crop: 'limit', quality: 'auto:good' }] }),
       },
