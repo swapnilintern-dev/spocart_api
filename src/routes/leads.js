@@ -6,17 +6,17 @@ import { validate } from '../middleware/validate.js';
 import { asyncHandler } from '../middleware/error.js';
 import { publicFormLimiter } from '../middleware/rateLimit.js';
 import { ok } from '../utils/respond.js';
-import { mobile } from './_schemas.js';
+import { mobile, plainText } from './_schemas.js';
 
 const r = Router();
 
 r.post('/', publicFormLimiter, validate(z.object({
-  name: z.string().trim().min(2, 'Name is required'),
-  business: z.string().trim().optional(),
+  name: plainText(100, 2, 'Name is required'),
+  business: plainText(150).optional(),
   mobile,
-  email: z.email().optional().or(z.literal('')),
-  message: z.string().trim().min(5, 'Tell us a little about what you need').max(2000),
-  sourcePage: z.string().optional(),
+  email: z.email().max(254).optional().or(z.literal('')),
+  message: plainText(2000, 5, 'Tell us a little about what you need'),
+  sourcePage: z.string().max(300).optional(),
   website: z.string().max(0).optional(), // honeypot
 })), asyncHandler(async (req, res) => {
   const { website, ...data } = req.body;

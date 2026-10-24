@@ -8,7 +8,7 @@ import { ok } from '../utils/respond.js';
 import * as auth from '../services/auth.js';
 import { MIN_PASSWORD_LENGTH } from '../services/password.js';
 import { mobileFromIdToken, firebaseEnabled } from '../services/firebase.js';
-import { mobile, gstin, email, businessType } from './_schemas.js';
+import { mobile, gstin, email, businessType, plainText } from './_schemas.js';
 import { env, isProd } from '../config/env.js';
 
 const r = Router();
@@ -82,10 +82,10 @@ r.post('/admin/password', requireAuth, requireAdmin, validate(z.object({
 r.get('/me', requireAuth, (req, res) => ok(res, auth.serializeUser(req.user)));
 
 r.put('/profile', requireAuth, validate(z.object({
-  businessName: z.string().trim().min(2, 'Business name is required'),
+  businessName: plainText(150, 2, 'Business name is required'),
   gstin,
   businessType,
-  contactName: z.string().trim().min(2, 'Contact name is required'),
+  contactName: plainText(100, 2, 'Contact name is required'),
   // Accepted for backwards compatibility with shipped apps and ignored:
   // saveProfile always stores the account's own verified number.
   mobile: mobile.optional(),

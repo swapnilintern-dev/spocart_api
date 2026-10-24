@@ -5,16 +5,16 @@ import { requireAuth } from '../middleware/auth.js';
 import { validate } from '../middleware/validate.js';
 import { asyncHandler, ApiError } from '../middleware/error.js';
 import { ok } from '../utils/respond.js';
-import { mobile, pincode } from './_schemas.js';
+import { mobile, pincode, plainText } from './_schemas.js';
 import { lookupPincode } from '../services/pincodes.js';
 
 const body = z.object({
-  contactName: z.string().trim().min(2, 'Contact name is required'),
-  businessName: z.string().trim().default(''),
-  line1: z.string().trim().min(4, 'Address line 1 is required'),
-  line2: z.string().trim().default(''),
-  city: z.string().trim().min(1, 'City is required'),
-  state: z.string().trim().min(1, 'State is required'),
+  contactName: plainText(100, 2, 'Contact name is required'),
+  businessName: plainText(150).default(''),
+  line1: plainText(200, 4, 'Address line 1 is required'),
+  line2: plainText(200).default(''),
+  city: plainText(80, 1, 'City is required'),
+  state: plainText(80, 1, 'State is required'),
   pincode,
   mobile,
   label: z.enum(['home', 'office', 'warehouse', 'ground', 'other']).default('home'),

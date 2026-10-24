@@ -11,7 +11,7 @@ import { checkoutFor, orderInclude, serializeOrder } from '../services/orders.js
 import { nextId } from '../services/ids.js';
 import { razorpay } from '../services/razorpay.js';
 import { addDays } from '../utils/dates.js';
-import { mobile } from './_schemas.js';
+import { mobile, plainText, fileUrl } from './_schemas.js';
 
 const r = Router();
 
@@ -24,14 +24,14 @@ r.get('/', requireAuth, asyncHandler(async (req, res) => {
 r.post('/', publicFormLimiter, optionalAuth, validate(z.object({
   kind: z.enum(['bulk', 'custom', 'csv']),
   items: z.array(z.object({
-    description: z.string().trim().min(1),
-    quantity: z.number().int().positive(),
-    productId: z.string().optional(),
-    size: z.string().optional(),
-  })).min(1, 'Add at least one item.'),
-  notes: z.string().trim().max(2000).default(''),
-  designFileUrl: z.string().optional(),
-  contactName: z.string().trim().optional(),
+    description: plainText(300, 1, 'Describe the item'),
+    quantity: z.number().int().positive().max(1000000),
+    productId: z.string().max(100).optional(),
+    size: z.string().max(20).optional(),
+  })).min(1, 'Add at least one item.').max(200, 'Up to 200 items per request.'),
+  notes: plainText(2000).default(''),
+  designFileUrl: fileUrl.optional(),
+  contactName: plainText(100).optional(),
   contactMobile: mobile.optional(),
   website: z.string().max(0).optional(), // honeypot: bots fill it, humans never see it
 })), asyncHandler(async (req, res) => {
